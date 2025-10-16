@@ -7,6 +7,8 @@ using System.Text.Json.Serialization;
 /// </summary>
 public class Bar
 {
+    public string Symbol { get; set; }
+    
     [JsonPropertyName("t")]
     public DateTime Timestamp { get; set; }
     

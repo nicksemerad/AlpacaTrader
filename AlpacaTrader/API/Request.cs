@@ -1,7 +1,7 @@
-﻿namespace Request;
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using RestSharp;
+
+namespace API;
 
 /// <summary>
 ///   This class handles making requests to the alpaca API endpoints
@@ -40,17 +40,13 @@ public class Request
         request.AddHeader("APCA-API-SECRET-KEY", secretKey);
     }
 
+    /// <summary>
+    ///   Get the response content as a string.
+    /// </summary>
+    /// <returns></returns>
     public async Task<string> GetAsync()
     {
         RestResponse response = await _client.GetAsync(_request);
-        return response.Content;
-    }
-
-    public static async Task Main(string[] args)
-    {
-        string end = Endpoint.LatestBars(["AAPL", "TSLA"]);
-        Request request = new Request(end);
-        string content = await request.GetAsync();
-        Console.WriteLine(content);
+        return response.Content ??  string.Empty;
     }
 }
