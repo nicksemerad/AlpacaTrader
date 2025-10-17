@@ -8,9 +8,21 @@ namespace API;
 /// </summary>
 public class Request
 {
+    /// <summary>
+    ///   The RestClient object that will be used to make the request.
+    /// </summary>
     private readonly RestClient _client;
+    
+    /// <summary>
+    ///   The RestRequest object requested by the _client.
+    /// </summary>
     private readonly RestRequest _request;
     
+    /// <summary>
+    ///   Builds a new Request for the url. Headers for the alpaca secret key and api key are added, as well as a
+    ///   header stating to accept json responses.
+    /// </summary>
+    /// <param name="url"></param>
     public Request(string url)
     {
         RestClientOptions opts = new RestClientOptions(url);
@@ -19,6 +31,13 @@ public class Request
         AddHeaders(_request);
     }
 
+    /// <summary>
+    ///   Using the Configuration package the Alpaca API Secret-Key and API-Key are retrieved from project user
+    ///   secrets. The two authentication headers are made with these keys and added to the RestRequest. A final
+    ///   header is added to accept json. If either private keys failed to be retrieved an ArgumentException is thrown.
+    /// </summary>
+    /// <param name="request">The RestRequest object to add the headers to</param>
+    /// <exception cref="ArgumentException">Throws if the secrets fail to be retrieved</exception>
     private static void AddHeaders(RestRequest request)
     {
         // get the user secrets configuration
@@ -35,18 +54,22 @@ public class Request
             throw new ArgumentException("Alpaca api key or private key not found.");
 
         // add the headers
-        request.AddHeader("accept", "application/json");
         request.AddHeader("APCA-API-KEY-ID", apiKey);
         request.AddHeader("APCA-API-SECRET-KEY", secretKey);
+        request.AddHeader("accept", "application/json");
     }
 
     /// <summary>
-    ///   Get the response content as a string.
+    ///   This Request's RestClient is used to send the RestRequest to the Alpaca API url. After waiting for the
+    ///   RestResponse object to return, the response content string is taken and returned. If there was no response
+    ///   content, an empty string is returned instead.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The Request response's content string, or an empty string if there was no response content</returns>
     public async Task<string> GetAsync()
     {
+        // log the request to the console
         RestResponse response = await _client.GetAsync(_request);
+        Console.WriteLine($"REQUEST: {_client.Options.BaseUrl?.ToString()} STATUS: {response.StatusCode}");
         return response.Content ??  string.Empty;
     }
 }
