@@ -1,3 +1,4 @@
+using Common;
 using Component;
 
 namespace API;
@@ -14,7 +15,7 @@ public class Client
     /// <returns>A list of all the bars returned from the endpoint</returns>
     public async Task<List<Bar>> GetLatestBars(List<string> symbols)
     {
-        Request request = new Request(Endpoint.LatestBars(symbols));
+        Request request = new Request(Endpoints.LatestBars(symbols));
         string content = await request.GetAsync();
         Response res = new Response(content);
         return res.ParseBars();
@@ -46,7 +47,7 @@ public class Client
         // all the historical bars have been retrieved.
         do 
         { 
-            string endpointUrl = Endpoint.HistoricalBars(symbols, timeframe, startTime, endTime, nextPageToken);
+            string endpointUrl = Endpoints.HistoricalBars(symbols, timeframe, startTime, endTime, nextPageToken);
             Request request = new Request(endpointUrl);
             string content = await request.GetAsync();
             Response res = new Response(content);

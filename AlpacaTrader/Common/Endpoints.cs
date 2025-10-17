@@ -1,11 +1,10 @@
-using System.Text;
+﻿namespace Common;
 
-namespace API;
 
 /// <summary>
-///   This static class provides a number of Alpaca API endpoint urls and handles their construction.
+///   This class holds common Alpaca API endpoint urls and handles their construction.
 /// </summary>
-public static class Endpoint
+public static class Endpoints
 {
     /// <summary>
     ///   The base url for all api endpoints needed when making paper trades.
@@ -16,9 +15,7 @@ public static class Endpoint
     ///   The base url for all api endpoints needed to get stock data.
     /// </summary>
     private const string Data = "https://data.alpaca.markets/v2/stocks";
-
-    private const string DateFormat = "yyyy-MM-ddTHH:mm:ssZ";
-
+    
     /// <summary>
     ///   Build the correct endpoint for getting the latest endpoint name using the passed symbols. The endpoint format
     ///   changes depending on the number of symbols
@@ -76,8 +73,8 @@ public static class Endpoint
         List<string> parameters =
         [
             $"&timeframe={timeframe}", 
-            $"&start={startTime.ToString(DateFormat)}",
-            $"&end={endTime.ToString(DateFormat)}"
+            $"&start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
+            $"&end={endTime.ToString(DateFormats.LongDateTimeFormat)}"
         ];
         
         // add the next page token if it is present
