@@ -25,7 +25,7 @@ public class Client
     ///   Uses pagination to get all the historical bars for the symbol that land within the start and end times. 
     /// </summary>
     /// <param name="symbols"></param>
-    /// <param name="timeframe"></param>
+    /// <param name="timeframe">[1-59]T, [1-23]H, 1D, 1W, [1,2,3,4,6,12]M</param>
     /// <param name="startTime"></param>
     /// <param name="endTime"></param>
     /// <returns></returns>
@@ -34,7 +34,8 @@ public class Client
     {
         string nextPageToken = null;
         List<Bar> bars = new List<Bar>();
-    
+        
+        // keep requesting the endpoint and adding the parsed results until there is no next page
         do
         {
             string end = Endpoint.HistoricalBars(symbols, timeframe, startTime, endTime, nextPageToken);

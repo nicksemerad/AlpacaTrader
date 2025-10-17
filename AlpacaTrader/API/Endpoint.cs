@@ -38,7 +38,7 @@ public static class Endpoint
     ///   DateTime strings look like: "2022-01-03T09:00:00Z"
     /// </summary>
     /// <param name="symbols"></param>
-    /// <param name="timeframe"></param>
+    /// <param name="timeframe">[1-59]T, [1-23]H, 1D, 1W, [1,2,3,4,6,12]M</param>
     /// <param name="startTime"></param>
     /// <param name="endTime"></param>
     /// <param name="nextPageToken"></param>
