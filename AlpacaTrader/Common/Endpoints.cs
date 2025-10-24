@@ -71,9 +71,10 @@ public static class Endpoints
         string baseUrl = $"{Data}/bars?symbols={string.Join(",", symbols)}";
         List<string> parameters =
         [
-            $"&timeframe={timeframe}", 
-            $"&start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
-            $"&end={endTime.ToString(DateFormats.LongDateTimeFormat)}"
+            $"timeframe={timeframe}", 
+            $"start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
+            $"end={endTime.ToString(DateFormats.LongDateTimeFormat)}",
+            "limit=10000"
         ];
         
         // add the next page token if it is present

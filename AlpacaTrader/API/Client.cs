@@ -43,7 +43,6 @@ public class Client
         string nextPageToken = string.Empty;
         List<Bar> bars = new List<Bar>();
         
-
         // starting with no nextPageToken, request the first page holding the historical bars and the next
         // nextPageToken. Update nextPageToken and request again. This is repeated until there are no more pages and
         // all the historical bars have been retrieved.
@@ -66,14 +65,14 @@ public class Client
 
     public static async Task Main(string[] args)
     {
-        // Connect to the database first
-        Console.WriteLine("Connecting to database");
-        var dbConnection = new TradingDbConnection();
-        if (!await dbConnection.IsDbConnectedAsync())
-            return;
-
-        Console.WriteLine("\nInitializing database");
-        await dbConnection.InitializeDatabaseAsync();
+        // // Connect to the database first
+        // Console.WriteLine("Connecting to database");
+        // var dbConnection = new TradingDbConnection();
+        // if (!await dbConnection.IsDbConnectedAsync())
+        //     return;
+        //
+        // Console.WriteLine("\nInitializing database");
+        // await dbConnection.InitializeDatabaseAsync();
 
         Console.WriteLine("\nScraping bars");
         Client client = new Client();
@@ -81,16 +80,16 @@ public class Client
         List<Bar> bars = await client.GetHistoricalBars(["AAPL"], "12H", start, end);
         Console.WriteLine($"\nTotal scraped bars: {bars.Count}");
         
-        Console.WriteLine("\nSaving bars to database");
-        var barOps = new BarOperations();
-        await barOps.InsertBarsAsync(bars);
-        Console.WriteLine("Bars saved");
-        
-        Console.WriteLine("\nGetting bars from database");
-        var dbBars = await barOps.GetBarsBySymbolAsync("AAPL", start, end);
-        Console.WriteLine($"Total bars in database: {dbBars.Count}");
-        
-        foreach (Bar bar in dbBars.Take(3))
-            Console.WriteLine(bar.ToString());
+        // Console.WriteLine("\nSaving bars to database");
+        // var barOps = new BarOperations();
+        // await barOps.InsertBarsAsync(bars);
+        // Console.WriteLine("Bars saved");
+        //
+        // Console.WriteLine("\nGetting bars from database");
+        // var dbBars = await barOps.GetBarsBySymbolAsync("AAPL", start, end);
+        // Console.WriteLine($"Total bars in database: {dbBars.Count}");
+        //
+        // foreach (Bar bar in dbBars.Take(3))
+        //     Console.WriteLine(bar.ToString());
     }
 }
