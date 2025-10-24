@@ -1,5 +1,7 @@
 using Common;
 using Component;
+using Database;
+using DbConnection = System.Data.Common.DbConnection;
 
 namespace API;
 
@@ -64,15 +66,34 @@ public class Client
 
     public static async Task Main(string[] args)
     {
+        // Connect to the database first
+        Console.WriteLine("Connecting to database");
+        var dbConnection = new TradingDbConnection();
+        bool connected = await dbConnection.IsDbConnectedAsync();
+        if (!await dbConnection.IsDbConnectedAsync())
+            return;
+
+        Console.WriteLine("\nInitializing database");
+        var initializer = new DbInitializer();
+        await initializer.InitializeDatabaseAsync();
+
+        Console.WriteLine("\nScraping bars");
         Client client = new Client();
-
         DateTime start = DateTime.Today.AddDays(-5), end = DateTime.Today;
-
         List<Bar> bars = await client.GetHistoricalBars(["AAPL"], "12H", start, end);
+        Console.WriteLine($"\nTotal scraped bars: {bars.Count}");
         
-        Console.WriteLine($"TOTAL BARS: {bars.Count}");
+        Console.WriteLine("\nSaving bars to database");
+        var barOps = new BarOperations();
+        await barOps.InsertBarsAsync(bars);
+        Console.WriteLine("Bars saved");
         
-        foreach (Bar bar in bars.Take(10))
+        Console.WriteLine("\nGetting bars from database");
+        var dbBars = await barOps.GetBarsBySymbolAsync("AAPL", start, end);
+        Console.WriteLine($"Total bars in database: {dbBars.Count}");
+
+        
+        foreach (Bar bar in dbBars.Take(3))
             Console.WriteLine(bar.ToString());
     }
 }

@@ -6,7 +6,7 @@ namespace Database;
 /// <summary>
 ///   This class handles connecting to the PostgreSQL database.
 /// </summary>
-public class DbConnection
+public class TradingDbConnection
 {
     /// <summary>
     ///   Connection string for TradingDb.
@@ -19,10 +19,10 @@ public class DbConnection
     /// <exception cref="InvalidOperationException">
     ///   If something goes wrong when getting the connection string
     /// </exception>
-    public DbConnection()
+    public TradingDbConnection()
     {
         IConfiguration configuration = new ConfigurationBuilder()
-            .AddUserSecrets<DbConnection>()
+            .AddUserSecrets<TradingDbConnection>()
             .Build();
 
         _connectionString = configuration.GetConnectionString("TradingDb")
