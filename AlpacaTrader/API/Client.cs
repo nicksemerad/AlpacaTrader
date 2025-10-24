@@ -73,8 +73,7 @@ public class Client
             return;
 
         Console.WriteLine("\nInitializing database");
-        var initializer = new DbInitializer();
-        await initializer.InitializeDatabaseAsync();
+        await dbConnection.InitializeDatabaseAsync();
 
         Console.WriteLine("\nScraping bars");
         Client client = new Client();

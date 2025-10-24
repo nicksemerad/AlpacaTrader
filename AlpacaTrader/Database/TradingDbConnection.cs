@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Common;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
 
 namespace Database;
@@ -26,7 +27,7 @@ public class TradingDbConnection
             .Build();
 
         _connectionString = configuration.GetConnectionString("TradingDb")
-                            ?? throw new InvalidOperationException();
+                            ?? throw new InvalidOperationException("Failed to get connection string.");
     }
 
     /// <summary>
@@ -57,5 +58,19 @@ public class TradingDbConnection
             Console.WriteLine($"Database connection failed: {ex.Message}");
             return false;
         }
+    }
+    
+    /// <summary>
+    ///   Initializes the database tables, creates them if they don't already exist. Should be called once when the
+    ///   TradingDbConnection is first connected.
+    /// </summary>
+    public async Task InitializeDatabaseAsync()
+    {
+        await using var connection = await GetConnectionAsync();
+        
+        await using var cmd = new NpgsqlCommand(SqlQueries.CreateBarsTable, connection);
+        await cmd.ExecuteNonQueryAsync();
+        
+        Console.WriteLine("Database tables initialized successfully.");
     }
 }
