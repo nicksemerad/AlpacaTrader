@@ -1,14 +1,18 @@
+using Common;
 using Component;
 using Npgsql;
 
 namespace Database;
 
+/// <summary>
+///   This class holds database operations for Bars i.e. saving and retrieving
+/// </summary>
 public class BarOperations
 {
     private readonly TradingDbConnection _tradingDbConnection;
 
     /// <summary>
-    ///   Makes a new BarOperations class to 
+    ///   Makes a new BarOperations class to handle database operations with Bars
     /// </summary>
     public BarOperations()
     {
@@ -20,14 +24,9 @@ public class BarOperations
     /// </summary>
     public async Task InsertBarAsync(Bar bar)
     {
+        // get a connection and make a new command using the InsertBar query with parameter values
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
-
-        const string sql = @"
-            INSERT INTO bars (symbol, timestamp, open, high, low, close, volume, trade_count, vwap)
-            VALUES (@symbol, @timestamp, @open, @high, @low, @close, @volume, @tradeCount, @vwap)
-            ON CONFLICT (symbol, timestamp) DO NOTHING";
-
-        await using var cmd = new NpgsqlCommand(sql, connection);
+        await using var cmd = new NpgsqlCommand(SqlQueries.InsertBar, connection);
         cmd.Parameters.AddWithValue("symbol", bar.Symbol);
         cmd.Parameters.AddWithValue("timestamp", bar.Timestamp);
         cmd.Parameters.AddWithValue("open", bar.Open);
@@ -55,24 +54,18 @@ public class BarOperations
     /// </summary>
     public async Task<List<Bar>> GetBarsBySymbolAsync(string symbol, DateTime startTime, DateTime endTime)
     {
+        // get a connection and make a new command using the GetBarsBySymbol query with parameter values
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
-
-        const string sql = """
-
-                                       SELECT symbol, timestamp, open, high, low, close, volume, trade_count, vwap
-                                       FROM bars
-                                       WHERE symbol = @symbol AND timestamp BETWEEN @startTime AND @endTime
-                                       ORDER BY timestamp
-                           """;
-
-        await using var cmd = new NpgsqlCommand(sql, connection);
+        await using var cmd = new NpgsqlCommand(SqlQueries.GetBarsBySymbol, connection);
         cmd.Parameters.AddWithValue("symbol", symbol);
         cmd.Parameters.AddWithValue("startTime", startTime);
         cmd.Parameters.AddWithValue("endTime", endTime);
 
+        // make a list to hold the bars and get a reader for the data from executing the command
         var bars = new List<Bar>();
         await using var reader = await cmd.ExecuteReaderAsync();
 
+        // for each item in the reader make a new bar with the data and add it to bars
         while (await reader.ReadAsync())
         {
             bars.Add(new Bar

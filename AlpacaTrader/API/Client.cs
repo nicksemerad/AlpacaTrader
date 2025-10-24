@@ -69,7 +69,6 @@ public class Client
         // Connect to the database first
         Console.WriteLine("Connecting to database");
         var dbConnection = new TradingDbConnection();
-        bool connected = await dbConnection.IsDbConnectedAsync();
         if (!await dbConnection.IsDbConnectedAsync())
             return;
 
@@ -91,7 +90,6 @@ public class Client
         Console.WriteLine("\nGetting bars from database");
         var dbBars = await barOps.GetBarsBySymbolAsync("AAPL", start, end);
         Console.WriteLine($"Total bars in database: {dbBars.Count}");
-
         
         foreach (Bar bar in dbBars.Take(3))
             Console.WriteLine(bar.ToString());
