@@ -21,7 +21,7 @@ public class Order
     public int FilledQuantity { get; set; }
     
     [JsonPropertyName("notional")]
-    public int Notional { get; set; } // dollar amount to trade (cant do with qty)
+    public decimal Notional { get; set; } // dollar amount to trade (cant do with qty)
     
     [JsonPropertyName("side")] // required
     public OrderSide Side { get; set; } // Buy or Sell
@@ -45,8 +45,8 @@ public class Order
      */
     
     [JsonPropertyName("limit_price")]
-    public int LimitPrice { get; set; } // needed for limit, stop_limit types
+    public decimal LimitPrice { get; set; } // needed for limit, stop_limit types
     
     [JsonPropertyName("stop_price")]
-    public int StopPrice { get; set; }  // needed for limit, stop_limit types
+    public decimal StopPrice { get; set; }  // needed for limit, stop_limit types
 }

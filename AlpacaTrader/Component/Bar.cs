@@ -46,7 +46,7 @@ public class Bar
     ///   The total number of shares traded in the time period.
     /// </summary>
     [JsonPropertyName("v")]
-    public long Volume { get; set; }
+    public int Volume { get; set; }
         
     /// <summary>
     ///   The total number of trades made in the time period.

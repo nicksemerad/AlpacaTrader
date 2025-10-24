@@ -76,7 +76,7 @@ public class BarOperations
                 High = reader.GetDecimal(3),
                 Low = reader.GetDecimal(4),
                 Close = reader.GetDecimal(5),
-                Volume = reader.GetInt64(6),
+                Volume = reader.GetInt32(6),
                 TradeCount = reader.GetInt32(7),
                 VolumeWeightedAverage = reader.GetDecimal(8)
             });

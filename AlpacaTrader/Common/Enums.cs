@@ -10,13 +10,9 @@ namespace Common;
 public enum OrderType
 {
     [Description("market")] Market,
-
     [Description("limit")] Limit,
-
     [Description("stop")] Stop,
-
     [Description("stop_limit")] StopLimit,
-
     [Description("trailing_stop")] TrailingStop
 }
 
@@ -45,12 +41,10 @@ public enum OrderSide
     [Description("sell")] Sell
 }
 
-// buy signal
-public enum Signal
+public enum QuoteSide
 {
-    Buy,
-    Sell,
-    Hold
+    [Description("ask")] Ask,
+    [Description("bid")] Bid
 }
 
 public static class EnumExtensions
