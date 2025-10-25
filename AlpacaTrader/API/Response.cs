@@ -1,13 +1,12 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Newtonsoft.Json.Linq;
 using Component;
+using Newtonsoft.Json.Linq;
 
 namespace API;
 
 /// <summary>
-///   Handle parsing the content from a request by deserializing them into their response type. Using
-///   The deserialized object the bars are extracted and returned. 
+///   Handle parsing the json content that is returned from a request into its corresponding C# objects. This is done
+///   using the Newtonsoft Json package, enabling the responses to be deserialized without needing custom classes to
+///   deserialize them into.
 /// </summary>
 public class Response
 {
@@ -24,24 +23,29 @@ public class Response
     {
         _content = content;
     }
-    
+
     /// <summary>
-    ///   Gets a root object from the response content json with the specified key and converts it to the specified
-    ///   data type T. If the key is not found in content a KeyNotFoundException is thrown. If something goes wrong
-    ///   when casting the root object to type T a JsonException is thrown.
+    ///   Try and get the root object at the parameter key from _content, and cast it to be of type T. If the object
+    ///   is successfully retrieved and cast, return true. If anything fails, return false. The rootObject parameter
+    ///   is set to the result of the cast if it is successful, or null if it fails.
     /// </summary>
-    /// <param name="key">The key of the root object in the content json</param>
-    /// <typeparam name="T">The data type to convert the root object to</typeparam>
-    /// <returns>The root object with the specified key converted to type T</returns>
-    /// <exception cref="KeyNotFoundException">If the key parameter isn't found in the content json</exception>
-    /// <exception cref="JsonException">If the root object can't be cast to type T</exception>
-    private T GetContentRootObject<T>(string key)
+    /// <param name="key">The key or name for the desired root object</param>
+    /// <param name="rootObject">The root object of type T after it has been retrieved and cast, or null</param>
+    /// <typeparam name="T">The type to try and cast the root object to</typeparam>
+    /// <returns>True if the retrieval and cast of the object was successful, false if it wasn't</returns>
+    private bool TryGetRootObject<T>(string key, out T? rootObject)
     {
         var json = JObject.Parse(_content);
-        if (!json.ContainsKey(key))
-            throw new KeyNotFoundException(key);
-
-        return json[key]!.ToObject<T>() ?? throw new JsonException();
+        try
+        {
+            rootObject = json[key]!.ToObject<T>();
+            return true;
+        }
+        catch
+        {
+            rootObject = default;
+            return false;
+        }
     }
 
     /// <summary>
@@ -50,11 +54,11 @@ public class Response
     /// <returns>A list of the Bars parsed from the response.</returns>
     public List<Bar> ParseBars()
     {
-        // get the root object "bars" from content and cast it as a string (symbol) and Bar dict 
-        var bars = GetContentRootObject<Dictionary<string, Bar>>("bars");
+        // try to get the bars from content as a string (symbol) and Bar dict, return an empty list if it fails
+        if (!TryGetRootObject<Dictionary<string, Bar>>("bars", out var bars)) return [];
 
         // make a list of the bars after adding the stock symbol (key) to each bar (value)
-        List<Bar> barsList = bars.Select(bar =>
+        List<Bar> barsList = bars!.Select(bar =>
         {
             bar.Value.Symbol = bar.Key;
             return bar.Value;
@@ -70,48 +74,46 @@ public class Response
     /// <returns>A list of the bars parsed from the response content</returns>
     public List<Bar> ParseHistoricalBars(ref string token)
     {
-        // deserialize into a HistoricalBarsResponse and make a list to hold the new bars
-        var barsResponse = JsonSerializer.Deserialize<HistoricalBarsResponse>(_content);
+        // try to get the bars as a dictionary of symbols and Bar lists, return an empty list if it fails
+        if (!TryGetRootObject<Dictionary<string, List<Bar>>>("bars", out var symbolBars)) return [];
 
-        // return an empty list if bars is null
-        if (barsResponse?.Bars == null) return [];
+        // if the next_page_token is present in the json update token, else set token as an empty string
+        token = TryGetRootObject<string>("next_page_token", out var nextPageToken)
+            ? nextPageToken!
+            : string.Empty;
 
-        // update the next page token
-        token = barsResponse.NextPageToken;
-
-        // for each key symbol in barsResponse.Bars 
+        // create a list to hold all the bars, then iterate through each symbol's bars
         List<Bar> barsList = new List<Bar>();
-        foreach (var (symbol, bars) in barsResponse.Bars)
+        foreach (var (symbol, bars) in symbolBars!)
         {
-            // add the symbol to every bar in the list and add them to barsList
-            foreach (Bar bar in bars)
+            // add the symbol to each bar and add all the bars to barsList
+            barsList.AddRange(bars.Select(bar =>
             {
                 bar.Symbol = symbol;
-                barsList.Add(bar);
-            }
+                return bar;
+            }));
         }
 
-        // return the list of bars parsed from the response
         return barsList;
     }
 
     /// <summary>
-    ///   Takes a JProperty from a JObject that has the stock symbol as its name and the quote pair data as the value
-    ///   and converts it into a QuotePair.
+    ///   Takes a symbol and JObject that has the quote data and converts it into a QuotePair.
     /// </summary>
-    /// <param name="prop">The JProperty that has the symbol as name and quote pair data as value</param>
-    /// <returns>The QuotePair object that was created using the JProperty data</returns>
-    private static QuotePair JPropToQuotePair(JProperty prop)
+    /// <param name="symbol">The stock symbol that the quote pair is for</param>
+    /// <param name="jObject">The JObject that the quote data is stored in</param>
+    /// <returns>The QuotePair object that was created using the JObject data</returns>
+    private static QuotePair JObjectToQuotePair(string symbol, JObject jObject)
     {
         return new QuotePair(
-            prop.Name,
-            prop.Value<DateTime?>("t") ?? default, // timestamp
-            prop.Value<string>("ax") ?? "", // ask exchange code
-            prop.Value<decimal?>("ap") ?? 0m, // ask price
-            prop.Value<double?>("as") ?? 0.0, // ask size
-            prop.Value<string>("bx") ?? "", // bid exchange code
-            prop.Value<decimal?>("bp") ?? 0m, // bid price
-            prop.Value<double?>("bs") ?? 0.0 // bid size
+            symbol,
+            jObject.Value<DateTime?>("t") ?? default, // timestamp
+            jObject.Value<string>("ax") ?? "", // ask exchange code
+            jObject.Value<decimal?>("ap") ?? 0m, // ask price
+            jObject.Value<double?>("as") ?? 0.0, // ask size
+            jObject.Value<string>("bx") ?? "", // bid exchange code
+            jObject.Value<decimal?>("bp") ?? 0m, // bid price
+            jObject.Value<double?>("bs") ?? 0.0 // bid size
         );
     }
 
@@ -122,11 +124,18 @@ public class Response
     /// <returns>A list of Quotes, storing the most recent bid and ask for a number of symbols</returns>
     public List<QuotePair> ParseQuotes()
     {
-        // get the root object "quotes" from content and cast it as a JObject
-        var quotes = GetContentRootObject<JObject>("quotes");
-        
-        // convert all the properties into QuotePairs using JPropToQuotePair and return them in a list
-        return quotes.Properties().Select(JPropToQuotePair).ToList();
+        // try to get the quotes object from content as a JObject, return an empty list if it fails
+        if (!TryGetRootObject<JObject>("quotes", out var quotes)) return [];
+
+        // return a list holding all the QuotePairs resulting from the parsed properties
+        return quotes!.Properties().Select(quote =>
+        {
+            // use the name (symbol) and value (quote data) to create a new QuotePair
+            string symbol = quote.Name;
+            JObject jObject = (JObject)quote.Value;
+
+            return JObjectToQuotePair(symbol, jObject);
+        }).ToList();
     }
 
     /// <summary>
@@ -136,149 +145,20 @@ public class Response
     /// <returns>A list of the QuotePairs(Ask and Bid Quotes) parsed from the response content</returns>
     public List<QuotePair> ParseHistoricalQuotes(ref string token)
     {
-        // deserialize into a HistoricalQuotesResponse and make a list to hold the new QuotePairs
-        var quotesResponse = JsonSerializer.Deserialize<HistoricalQuotesResponse>(_content);
+        // try to get the quotes object as a JArray and symbol as a string, return an empty list if either fails
+        if (!TryGetRootObject<JArray>("quotes", out var quotes)
+            || !TryGetRootObject<string>("symbol", out var symbol)) return [];
 
-        // return an empty list if Quotes is null
-        if (quotesResponse?.Quotes == null) return [];
+        // if the next_page_token is present in the json update token, else set token as an empty string
+        token = TryGetRootObject<string>("next_page_token", out var nextPageToken)
+            ? nextPageToken!
+            : string.Empty;
 
-        // update the next page token
-        token = quotesResponse.NextPageToken;
-
-        // make a list to hold each symbol's Ask and Bid quote pairs
-        List<QuotePair> quotesList = new List<QuotePair>();
-
-        // create a new QuotePair from every QuoteResponse object in the response Quotes
-        foreach (QuoteResponse quote in quotesResponse.Quotes)
+        return quotes!.Select(quote =>
         {
-            quotesList.Add(new QuotePair(quotesResponse.Symbol, quote.Timestamp, quote.AskExchange, quote.AskPrice,
-                quote.AskSize, quote.BidExchange, quote.BidPrice, quote.BidSize));
-        }
-
-        return quotesList;
-    }
-
-    /// <summary>
-    ///   For deserialization of responses from the historical bars endpoint. The response json has one object and
-    ///   one string. All the bars information is contained in an object titled "bars". This object holds lists of
-    ///   bars with the symbol as the list's title. The string is a long token that is used to paginate through the
-    ///   symbol's historical bars. For example:
-    ///   <code>
-    ///     {
-    ///       "bars" { "TSLA": [ { many bars } ], "AAPL": [ many bars ] },
-    ///       "next_page_token": random string"
-    ///     }
-    ///   </code>
-    /// </summary>
-    private class HistoricalBarsResponse
-    {
-        /// <summary>
-        ///   A dictionary of strings as keys and Bars as values. This is what the "bars" json object is deserialized
-        ///   into.
-        /// </summary>
-        [JsonPropertyName("bars")]
-        public Dictionary<string, List<Bar>> Bars { get; set; }
-
-        /// <summary>
-        ///   A string holding the next page's token for pagination. This is what "next_page_token" deserializes into.
-        /// </summary>
-        [JsonPropertyName("next_page_token")]
-        public string NextPageToken { get; set; }
-    }
-
-    /// <summary>
-    ///   For deserializing a single quote object from a json response from GetLatestQuotes or GetHistoricalQuotes
-    ///   endpoints. The response json has 9 different data points for a stock's most recent quotes update, including
-    ///   the exchange, price, and size for the most recent bid and ask, as well as some metadata, each being explained
-    ///   in more detail in the class attributes. For example:
-    ///   <code>
-    ///     { "t": time, "ax": ask exchange, "ap": ask price, "as": ask price, "bx": bid exchange,
-    ///       "bp": bid price, "bs": bid size, "c": [ conditions ], "z": tape }
-    ///   </code>
-    /// </summary>
-    private class QuoteResponse
-    {
-        /// <summary>
-        ///   Timestamp for the quotes.
-        /// </summary>
-        [JsonPropertyName("t")]
-        public DateTime Timestamp { get; set; }
-
-        /// <summary>
-        ///   An exchange code representing which exchange the ask came from i.e. "N"=NYSE "V"=IEX
-        /// </summary>
-        [JsonPropertyName("ax")]
-        public string AskExchange { get; set; }
-
-        /// <summary>
-        ///   The price for the ask.
-        /// </summary>
-        [JsonPropertyName("ap")]
-        public decimal AskPrice { get; set; }
-
-        /// <summary>
-        ///   The number of shares for the ask.
-        /// </summary>
-        [JsonPropertyName("as")]
-        public double AskSize { get; set; }
-
-        /// <summary>
-        ///   An exchange code representing which exchange the bid came from i.e. "N"=NYSE "V"=IEX
-        /// </summary>
-        [JsonPropertyName("bx")]
-        public string BidExchange { get; set; }
-
-        /// <summary>
-        ///   The price for the bid.
-        /// </summary>
-        [JsonPropertyName("bp")]
-        public decimal BidPrice { get; set; }
-
-        /// <summary>
-        ///   The number of shares for the bid.
-        /// </summary>
-        [JsonPropertyName("bs")]
-        public double BidSize { get; set; }
-
-        /// <summary>
-        ///   A list of codes representing the quote conditions.
-        /// </summary>
-        [JsonPropertyName("c")]
-        public List<string> Conditions { get; set; }
-
-        /// <summary>
-        ///   The tape code of the quotes i.e. "A"=NYSE "B"=OTHER "C"=NASDAQ
-        /// </summary>
-        [JsonPropertyName("z")]
-        public string Tape { get; set; }
-    }
-    
-    /// <summary>
-    ///   For deserialization of responses from the historical quotes endpoint. The response json has three elements:
-    ///   a list of quote pairs called quotes, a next_page_token string used for pagination, and a symbol string for
-    ///   the stock symbol that the quotes are for. For example:
-    ///   <code>
-    ///     { "quotes" [ many quotes ], "next_page_token": random string, "symbol": stock symbol }
-    ///   </code>
-    /// </summary>
-    private class HistoricalQuotesResponse
-    {
-        /// <summary>
-        ///   The list of historical quotes for the stock symbol.
-        /// </summary>
-        [JsonPropertyName("quotes")]
-        public List<QuoteResponse> Quotes { get; set; }
-
-        /// <summary>
-        ///   A string holding the next page's token for pagination. This is what "next_page_token" deserializes into.
-        /// </summary>
-        [JsonPropertyName("next_page_token")]
-        public string NextPageToken { get; set; }
-
-        /// <summary>
-        ///   The symbol that these historical quotes are for.
-        /// </summary>
-        [JsonPropertyName("symbol")]
-        public string Symbol { get; set; }
+            // use the symbol and array element with the quote data to create a new QuotePair
+            JObject jObject = (JObject)quote;
+            return JObjectToQuotePair(symbol!, jObject);
+        }).ToList();
     }
 }
