@@ -1,6 +1,6 @@
 ﻿namespace Component;
 
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 /// <summary>
 ///   This class represents a single Bar in a stock's candlestick chart.
@@ -10,54 +10,55 @@ public class Bar
     /// <summary>
     ///   This Bar's stock ticker symbol.
     /// </summary>
+    [JsonIgnore]
     public string Symbol { get; set; }
     
     /// <summary>
     ///   The time this Bar's period started. For a 1-hour bar it's the start of the hour.
     /// </summary>
-    [JsonPropertyName("t")]
+    [JsonProperty("t")]
     public DateTime Timestamp { get; set; }
         
     /// <summary>
     ///   The first price the stock traded at in the time period.
     /// </summary>
-    [JsonPropertyName("o")]
+    [JsonProperty("o")]
     public decimal Open { get; set; }
         
     /// <summary>
     ///   The highest price the stock traded at in the time period.
     /// </summary>
-    [JsonPropertyName("h")]
+    [JsonProperty("h")]
     public decimal High { get; set; }
         
     /// <summary>
     ///   The lowest price the stock traded at in the time period.
     /// </summary>
-    [JsonPropertyName("l")]
+    [JsonProperty("l")]
     public decimal Low { get; set; }
         
     /// <summary>
     ///   The last price the stock traded at in the time period.
     /// </summary>
-    [JsonPropertyName("c")]
+    [JsonProperty("c")]
     public decimal Close { get; set; }
         
     /// <summary>
     ///   The total number of shares traded in the time period.
     /// </summary>
-    [JsonPropertyName("v")]
+    [JsonProperty("v")]
     public int Volume { get; set; }
         
     /// <summary>
     ///   The total number of trades made in the time period.
     /// </summary>
-    [JsonPropertyName("n")]
+    [JsonProperty("n")]
     public int TradeCount { get; set; }
         
     /// <summary>
     ///   The average price of each share traded in the time period. 
     /// </summary>
-    [JsonPropertyName("vw")]
+    [JsonProperty("vw")]
     public decimal VolumeWeightedAverage { get; set; }
 
     /// <summary>

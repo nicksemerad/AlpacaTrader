@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Common;
+using Newtonsoft.Json.Linq;
 using Component;
 
 namespace API;
@@ -31,19 +31,16 @@ public class Response
     /// <returns>A list of the Bars parsed from the response.</returns>
     public List<Bar> ParseBars()
     {
-        // deserialize the response into a BarsResponse which has a list of Bars
-        var barsResponse = JsonSerializer.Deserialize<BarsResponse>(_content);
+        // parse the json into a JObject, and the bars attribute to a dict with the symbol and bar
+        JObject json = JObject.Parse(_content);
+        Dictionary<string, Bar> bars = json["bars"]!.ToObject<Dictionary<string, Bar>>() ?? new();
 
-        // return an empty list if bars is null
-        if (barsResponse?.Bars == null) return [];
-
-        // add the symbol to each of the bars before returning the list
-        List<Bar> barsList = new List<Bar>();
-        foreach (var (barSymbol, barData) in barsResponse.Bars)
+        // make a list of the bars after adding the stock symbol to each bar
+        List<Bar> barsList = bars.Select(bar =>
         {
-            barData.Symbol = barSymbol;
-            barsList.Add(barData);
-        }
+            bar.Value.Symbol = bar.Key;
+            return bar.Value;
+        }).ToList();
 
         return barsList;
     }
@@ -130,24 +127,7 @@ public class Response
         
         return quotesList;
     }
-
-    /// <summary>
-    ///   For deserializing the response from GetLatestBar or GetLatestBars endpoints. The response json is all
-    ///   contained in an object titled "bars". This object contains other objects, with each one being a bar with
-    ///   its stock ticker symbol as the name. For example:
-    ///   <code>
-    ///     { "bars" { "TSLA": { bar info }, "AAPL": { bar info } } }
-    ///   </code>
-    /// </summary>
-    private class BarsResponse
-    {
-        /// <summary>
-        ///   A dictionary of strings as keys and Bars as values. This is what the "bars" json object
-        ///   is deserialized into.
-        /// </summary>
-        [JsonPropertyName("bars")] public Dictionary<string, Bar> Bars { get; set; }
-    }
-
+    
     /// <summary>
     ///   For deserialization of responses from the historical bars endpoint. The response json has one object and
     ///   one string. All the bars information is contained in an object titled "bars". This object holds lists of

@@ -16,17 +16,14 @@ public static class Endpoints
     private const string Data = "https://data.alpaca.markets/v2/stocks";
     
     /// <summary>
-    ///   Build the correct endpoint for getting the latest endpoint name using the passed symbols. The endpoint format
-    ///   changes depending on the number of symbols
+    ///   Build the endpoint for getting the latest data from the endpoint name using the passed symbols.
     /// </summary>
-    /// <param name="name">The name of the desired endpoint data i.e. bars, trades, etc</param>
+    /// <param name="name">The name of the desired endpoint data i.e. bars, quotes, etc</param>
     /// <param name="symbols">The stock ticker symbol(s) to get the data for</param>
     /// <returns>The full api endpoint url for the parameters</returns>
     private static string BuildDataEndpointUrl(string name, List<string> symbols)
     {
-        return symbols.Count > 1
-            ? $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}"
-            : $"{Data}/{symbols}/{name}/latest";
+        return $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}";
     }
     
     /// <summary>
@@ -108,7 +105,7 @@ public static class Endpoints
     /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
     /// <returns>The api endpoint url for the latest quotes</returns>
     public static string LatestQuotes(List<string> symbols)
-        => $"{Data}/quotes/latest?symbols={string.Join(",", symbols)}";
+        => BuildDataEndpointUrl("quotes", symbols);
     
     /// <summary>
     ///   Builds the endpoint url for a single page of the historical quotes in the time from startTime to endTime for
