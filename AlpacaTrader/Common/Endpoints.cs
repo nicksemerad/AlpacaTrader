@@ -59,33 +59,35 @@ public static class Endpoints
     /// <returns>The api endpoint url for the latest bar(s)</returns>
     public static string LatestBars(List<string> symbols)
         => BuildDataEndpointUrl("bars", symbols);
-
-    /// <summary>
-    ///   Get the latest bid and ask for the specified stock ticker symbol(s).
-    /// </summary>
-    /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
-    /// <returns>The api endpoint url for the latest quotes</returns>
-    public static string LatestQuotes(List<string> symbols)
-        => $"{Data}/quotes/latest?symbols={string.Join(",", symbols)}";
     
     /// <summary>
-    ///   Builds the endpoint url for the first page of the historical bars in the time from startTime to endTime.
-    ///   timeframe is formatted as: [1-59]T, [1-23]H, 1D, 1W, [1,2,3,4,6,12]M
-    ///   DateTime strings look like: "2022-01-03T09:00:00Z"
+    ///   Builds the endpoint url for a single page of the historical bars in the time from startTime to endTime for
+    ///   the specified stock symbol. The timeframe parameter dictates the frequency of the bars wanted, formating
+    ///   shown below. The numbers or number ranges inside the brackets are the limits for those time periods. For
+    ///   example, timeframes in the minutes can only be from 1 to 59 minutes, as anything longer should use the hours
+    ///   timeframes instead.
+    ///   <list type="bullet">
+    ///     <item>Minutes: [1-59]T</item>
+    ///     <item>Hours: [1-23]H</item>
+    ///     <item>Days: 1D</item>
+    ///     <item>Weeks: 1W</item>
+    ///     <item>Months: [1,2,3,4,6,12]M</item>
+    ///   </list>
     /// </summary>
-    /// <param name="symbols">The ticker symbol(s) to get the historical bars for</param>
+    /// <param name="symbol">The ticker symbol to get the historical bars for</param>
     /// <param name="timeframe">The granularity of the historical bars i.e. one per hour, day, etc</param>
     /// <param name="startTime">DateTime the historical bars start at</param>
     /// <param name="endTime">DateTime the historical bars will end at</param>
     /// <param name="nextPageToken">The token needed to request the next page, if there is one</param>
-    /// <returns>The api endpoint url for the next page of historical bars for the symbols</returns>
-    public static string HistoricalBars(List<string> symbols, string timeframe, DateTime startTime, DateTime endTime,
+    /// <returns>The api endpoint url for the next page of historical bars for the symbol</returns>
+    public static string HistoricalBars(string symbol, string timeframe, DateTime startTime, DateTime endTime,
         string nextPageToken)
     {
-        // set the endpoint base url including the symbols, and the url parameter values
-        string baseUrl = $"{Data}/bars?symbols={string.Join(",", symbols)}";
+        // set the endpoint base url and make the parameter list
+        string baseUrl = $"{Data}/bars?";
         List<string> parameters =
         [
+            $"symbols={symbol}",
             $"timeframe={timeframe}", 
             $"start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
             $"end={endTime.ToString(DateFormats.LongDateTimeFormat)}",
@@ -100,4 +102,39 @@ public static class Endpoints
         return ConcatUrlParameters(baseUrl, parameters);
     }
 
+    /// <summary>
+    ///   Get the latest bid and ask quotes for the specified stock ticker symbol(s).
+    /// </summary>
+    /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
+    /// <returns>The api endpoint url for the latest quotes</returns>
+    public static string LatestQuotes(List<string> symbols)
+        => $"{Data}/quotes/latest?symbols={string.Join(",", symbols)}";
+    
+    /// <summary>
+    ///   Builds the endpoint url for a single page of the historical quotes in the time from startTime to endTime for
+    ///   the specified stock symbol.
+    /// </summary>
+    /// <param name="symbol">The ticker symbol to get the historical quotes for</param>
+    /// <param name="startTime">DateTime the historical quotes start at</param>
+    /// <param name="endTime">DateTime the historical quotes will end at</param>
+    /// <param name="nextPageToken">The token needed to request the next page, if there is one</param>
+    /// <returns>The api endpoint url for the next page of historical quotes for the symbol</returns>
+    public static string HistoricalQuotes(string symbol, DateTime startTime, DateTime endTime, string nextPageToken)
+    {
+        // set the endpoint base url including the symbol and make the parameter list
+        string baseUrl = $"{Data}/{symbol}/quotes?";
+        List<string> parameters =
+        [
+            $"start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
+            $"end={endTime.ToString(DateFormats.LongDateTimeFormat)}",
+            "limit=10000"
+        ];
+        
+        // add the next page token if it is present
+        if (!string.IsNullOrEmpty(nextPageToken))
+            parameters.Add($"&page_token={nextPageToken}");
+        
+        // return the resulting url
+        return ConcatUrlParameters(baseUrl, parameters);
+    }
 }

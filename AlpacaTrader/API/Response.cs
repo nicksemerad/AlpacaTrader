@@ -55,7 +55,7 @@ public class Response
     /// <returns>A list of the bars parsed from the response content</returns>
     public List<Bar> ParseHistoricalBars(ref string token)
     {
-        // deserialize into a HistoricalBarsResponse and make a list to hold the new bots
+        // deserialize into a HistoricalBarsResponse and make a list to hold the new bars
         var barsResponse = JsonSerializer.Deserialize<HistoricalBarsResponse>(_content);
 
         // return an empty list if bars is null
@@ -103,6 +103,35 @@ public class Response
     }
 
     /// <summary>
+    ///   Parses the content response from a request for a symbol's historical quotes. (i.e. GetHistoricalQuotes)
+    /// </summary>
+    /// <param name="token">The token reference that points to the next page of Quotes</param>
+    /// <returns>A list of the QuotePairs(Ask and Bid Quotes) parsed from the response content</returns>
+    public List<QuotePair> ParseHistoricalQuotes(ref string token)
+    {
+        // deserialize into a HistoricalQuotesResponse and make a list to hold the new QuotePairs
+        var quotesResponse = JsonSerializer.Deserialize<HistoricalQuotesResponse>(_content);
+        
+        // return an empty list if Quotes is null
+        if (quotesResponse?.Quotes == null) return [];
+
+        // update the next page token
+        token = quotesResponse.NextPageToken;
+        
+        // make a list to hold each symbol's Ask and Bid quote pairs
+        List<QuotePair> quotesList = new List<QuotePair>();
+
+        // create a new QuotePair from every QuoteResponse object in the response Quotes
+        foreach (QuoteResponse quote in quotesResponse.Quotes)
+        {
+            quotesList.Add(new QuotePair(quotesResponse.Symbol, quote.Timestamp, quote.AskExchange, quote.AskPrice, 
+                quote.AskSize, quote.BidExchange, quote.BidPrice, quote.BidSize));
+        }
+        
+        return quotesList;
+    }
+
+    /// <summary>
     ///   For deserializing the response from GetLatestBar or GetLatestBars endpoints. The response json is all
     ///   contained in an object titled "bars". This object contains other objects, with each one being a bar with
     ///   its stock ticker symbol as the name. For example:
@@ -143,22 +172,6 @@ public class Response
         ///   A string holding the next page's token for pagination. This is what "next_page_token" deserializes into.
         /// </summary>
         [JsonPropertyName("next_page_token")] public string NextPageToken { get; set; }
-    }
-
-    /// <summary>
-    ///   For deserializing the response from GetLatestQuotes endpoint. The response json has one object called quotes.
-    ///   This object can have one or many objects, with each one being titled a stock ticker. Each stock ticker object
-    ///   holds all the data for the most recent update to the stock's ask or bid quotes. For example:
-    ///   <code>
-    ///     { "quotes" { "AAPL": { quotes info }, "TSLA": { quotes info } } }
-    ///   </code>
-    /// </summary>
-    private class QuotesResponse
-    {
-        /// <summary>
-        ///   Dictionary storing pairs of a stock symbol and most recent quote response.
-        /// </summary>
-        [JsonPropertyName("quotes")]  public Dictionary<string, QuoteResponse> Quotes { get; set; }
     }
 
     /// <summary>
@@ -217,5 +230,47 @@ public class Response
         ///   The tape code of the quotes i.e. "A"=NYSE "B"=OTHER "C"=NASDAQ
         /// </summary>
         [JsonPropertyName("z")] public string Tape { get; set; }
+    }
+    
+    /// <summary>
+    ///   For deserializing the response from GetLatestQuotes endpoint. The response json has one object called quotes.
+    ///   This object can have one or many objects, with each one being titled a stock ticker. Each stock ticker object
+    ///   holds all the data for the most recent update to the stock's ask or bid quotes. For example:
+    ///   <code>
+    ///     { "quotes" { "AAPL": { quotes info }, "TSLA": { quotes info } } }
+    ///   </code>
+    /// </summary>
+    private class QuotesResponse
+    {
+        /// <summary>
+        ///   Dictionary storing pairs of a stock symbol and most recent quote response.
+        /// </summary>
+        [JsonPropertyName("quotes")]  public Dictionary<string, QuoteResponse> Quotes { get; set; }
+    }
+
+    /// <summary>
+    ///   For deserialization of responses from the historical quotes endpoint. The response json has three elements:
+    ///   a list of quote pairs called quotes, a next_page_token string used for pagination, and a symbol string for
+    ///   the stock symbol that the quotes are for. For example:
+    ///   <code>
+    ///     { "quotes" [ many quotes ], "next_page_token": random string, "symbol": stock symbol }
+    ///   </code>
+    /// </summary>
+    private class HistoricalQuotesResponse
+    {
+        /// <summary>
+        ///   The list of historical quotes for the stock symbol.
+        /// </summary>
+        [JsonPropertyName("quotes")] public List<QuoteResponse> Quotes { get; set; }
+        
+        /// <summary>
+        ///   A string holding the next page's token for pagination. This is what "next_page_token" deserializes into.
+        /// </summary>
+        [JsonPropertyName("next_page_token")] public string NextPageToken { get; set; }
+        
+        /// <summary>
+        ///   The symbol that these historical quotes are for.
+        /// </summary>
+        [JsonPropertyName("symbol")] public string Symbol { get; set; }
     }
 }

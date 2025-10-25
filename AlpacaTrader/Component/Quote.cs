@@ -18,8 +18,16 @@ public class Quote
     /// </summary>
     public QuoteSide Side { get; set; } // ask or bid
 
-    /// <summary>
-    ///   An exchange code representing which exchange the quote came from i.e. "N"=NYSE "V"=IEX
+    /// <summary> 
+    ///   An exchange code representing which exchange the quote came from. Some common codes are:
+    ///   <list type="bullet">
+    ///     <item>"N": New York Stock Exchange - XNYS</item>
+    ///     <item>"P": NYSE Arca SM - ARCX</item>
+    ///     <item>"Q": Nasdaq OMX - XNAS</item>
+    ///     <item>"V": Investors' Exchange LLC - IEXG</item>
+    ///   </list>
+    ///   The full list can be found in the "Stocks" column of the table at this link:
+    ///   https://toslc.thinkorswim.com/center/howToTos/thinkManual/Miscellaneous/Exchange-Codes
     /// </summary>
     public string Exchange { get; set; }
 
