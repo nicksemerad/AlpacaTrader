@@ -14,7 +14,7 @@ public static class Endpoints
     ///   The base url for all api endpoints needed to get stock data.
     /// </summary>
     private const string Data = "https://data.alpaca.markets/v2/stocks";
-    
+
     /// <summary>
     ///   Build the endpoint for getting the latest data from the endpoint name using the passed symbols.
     /// </summary>
@@ -25,7 +25,7 @@ public static class Endpoints
     {
         return $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}";
     }
-    
+
     /// <summary>
     ///   Concatenates all the parameter strings onto the base url with an ampersand ('&') in between each parameter.
     /// </summary>
@@ -56,7 +56,7 @@ public static class Endpoints
     /// <returns>The api endpoint url for the latest bar(s)</returns>
     public static string LatestBars(List<string> symbols)
         => BuildDataEndpointUrl("bars", symbols);
-    
+
     /// <summary>
     ///   Builds the endpoint url for a single page of the historical bars in the time from startTime to endTime for
     ///   the specified stock symbol. The timeframe parameter dictates the frequency of the bars wanted, formating
@@ -78,11 +78,11 @@ public static class Endpoints
     /// <param name="nextPageToken">The token needed to request the next page, defaults to null</param>
     /// <returns>The api endpoint url for the next page of historical bars for the symbol</returns>
     public static string HistoricalBars(string symbol, string timeframe, DateTime startTime, DateTime endTime,
-        string? nextPageToken=null)
+        string? nextPageToken = null)
     {
         // the bars endpoint url needs a symbol and timeframe so add them to a list in the url parameter format
-        List<string> additionalParams = [ $"symbols={symbol}", $"timeframe={timeframe}" ];
-        
+        List<string> additionalParams = [$"symbols={symbol}", $"timeframe={timeframe}"];
+
         // pass the list into the HistoricalUrl method to include them in the url and return the result
         return HistoricalUrl($"{Data}/bars", startTime, endTime, nextPageToken, additionalParams);
     }
@@ -94,7 +94,7 @@ public static class Endpoints
     /// <returns>The api endpoint url for the latest quotes</returns>
     public static string LatestQuotes(List<string> symbols)
         => BuildDataEndpointUrl("quotes", symbols);
-    
+
     /// <summary>
     ///   Builds the endpoint url for a single page of the historical quotes in the time from startTime to endTime for
     ///   the specified stock symbol.
@@ -104,7 +104,8 @@ public static class Endpoints
     /// <param name="endTime">DateTime the historical quotes will end at</param>
     /// <param name="nextPageToken">The token needed to request the next page, defaults to null</param>
     /// <returns>The api endpoint url for the next page of historical quotes for the symbol</returns>
-    public static string HistoricalQuotes(string symbol, DateTime startTime, DateTime endTime,  string? nextPageToken=null)
+    public static string HistoricalQuotes(string symbol, DateTime startTime, DateTime endTime,
+        string? nextPageToken = null)
     {
         // the quotes endpoint has no additional params, so just return the string result from HistoricalUrl 
         return HistoricalUrl($"{Data}/{symbol}/quotes", startTime, endTime, nextPageToken);
@@ -121,22 +122,22 @@ public static class Endpoints
     /// <param name="nextPageToken">The token needed to request the next page or null if there isn't one</param>
     /// <param name="additionalParams">A list of additional parameters that the endpoint url requires</param>
     /// <returns>The constructed url for the specific endpoint with all the necessary parameters</returns>
-    private static string HistoricalUrl(string baseUrl, DateTime startTime, DateTime endTime, 
-        string? nextPageToken, List<string>? additionalParams=null)
+    private static string HistoricalUrl(string baseUrl, DateTime startTime, DateTime endTime,
+        string? nextPageToken, List<string>? additionalParams = null)
     {
         // make a new list with any additionalParams, add the time range and max items/ page params
         List<string> urlParams =
         [
-            ..additionalParams ?? [], 
+            ..additionalParams ?? [],
             $"start={DateFormats.Url(startTime)}",
             $"end={DateFormats.Url(endTime)}",
             "limit=10000"
         ];
-        
+
         // add the next page token if one was passed
         if (!string.IsNullOrEmpty(nextPageToken))
             urlParams.Add($"page_token={nextPageToken}");
-        
+
         // return the url with the parameters concatenated to the base
         return ConcatUrlParameters(baseUrl, urlParams);
     }
