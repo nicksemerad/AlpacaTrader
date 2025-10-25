@@ -191,7 +191,7 @@ public class Response
         /// <summary>
         ///   The number of shares for the ask.
         /// </summary>
-        [JsonPropertyName("as")] public int AskSize { get; set; }
+        [JsonPropertyName("as")] public double AskSize { get; set; }
 
         /// <summary>
         ///   An exchange code representing which exchange the bid came from i.e. "N"=NYSE "V"=IEX
@@ -206,7 +206,7 @@ public class Response
         /// <summary>
         ///   The number of shares for the bid.
         /// </summary>
-        [JsonPropertyName("bs")] public int BidSize { get; set; }
+        [JsonPropertyName("bs")] public double BidSize { get; set; }
         
         /// <summary>
         ///   A list of codes representing the quote conditions.

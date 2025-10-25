@@ -31,7 +31,7 @@ public class Quote
     /// <summary>
     ///   The number of shares the quote was made for.
     /// </summary>
-    public int Size { get; set; }
+    public double Size { get; set; }
 
     /// <summary>
     ///   Creates a new Quote object with the parameters.
@@ -41,7 +41,7 @@ public class Quote
     /// <param name="exchange">A code for the exchange the quote originates from</param>
     /// <param name="price">The quoted price</param>
     /// <param name="size">The number of shares the quote is for</param>
-    public Quote(DateTime timestamp, QuoteSide side, string exchange, decimal price, int size)
+    public Quote(DateTime timestamp, QuoteSide side, string exchange, decimal price, double size)
     {
         Timestamp = timestamp;
         Side = side;
@@ -95,8 +95,8 @@ public class QuotePair
     /// <param name="bidExchange">The code for the exchange the bid quote originated from</param>
     /// <param name="bidPrice">The price listed in the bid quote</param>
     /// <param name="bidSize">The number of shares in the bid quote</param>
-    public QuotePair(string symbol, DateTime timestamp, string askExchange, decimal askPrice, int askSize,
-        string bidExchange, decimal bidPrice, int bidSize)
+    public QuotePair(string symbol, DateTime timestamp, string askExchange, decimal askPrice, double askSize,
+        string bidExchange, decimal bidPrice, double bidSize)
     {
         Symbol = symbol;
         // if the quotes response didn't include the ask data then the Ask quote is null
