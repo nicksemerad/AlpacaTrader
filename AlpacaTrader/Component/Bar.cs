@@ -1,4 +1,5 @@
 ﻿namespace Component;
+using Common;
 
 using Newtonsoft.Json;
 
@@ -67,7 +68,7 @@ public class Bar
     /// <returns>The string representation of this Bar</returns>
     public override string ToString()
     {
-        return $"{Symbol} [{Timestamp:yyyy-MM-dd HH:mm}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
+        return $"{Symbol} [{DateFormats.Url(Timestamp)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
                $"O: ${Open:N2} - C: ${Close:N2}\n" + $"H: ${High:N2} - L: ${Low:N2}\n";
     }
 }

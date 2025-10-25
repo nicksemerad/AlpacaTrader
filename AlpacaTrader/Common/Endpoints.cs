@@ -86,8 +86,8 @@ public static class Endpoints
         [
             $"symbols={symbol}",
             $"timeframe={timeframe}", 
-            $"start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
-            $"end={endTime.ToString(DateFormats.LongDateTimeFormat)}",
+            $"start={DateFormats.Url(startTime)}",
+            $"end={DateFormats.Url(endTime)}",
             "limit=10000"
         ];
         
@@ -122,8 +122,8 @@ public static class Endpoints
         string baseUrl = $"{Data}/{symbol}/quotes?";
         List<string> parameters =
         [
-            $"start={startTime.ToString(DateFormats.LongDateTimeFormat)}",
-            $"end={endTime.ToString(DateFormats.LongDateTimeFormat)}",
+            $"start={DateFormats.Url(startTime)}",
+            $"end={DateFormats.Url(endTime)}",
             "limit=10000"
         ];
         
