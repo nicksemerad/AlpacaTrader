@@ -12,7 +12,7 @@ namespace API;
 public class Response
 {
     /// <summary>
-    ///   The content string recieved from the request response. 
+    ///   The content string received from the request response. 
     /// </summary>
     private readonly string _content;
 
@@ -26,16 +26,34 @@ public class Response
     }
     
     /// <summary>
+    ///   Gets a root object from the response content json with the specified key and converts it to the specified
+    ///   data type T. If the key is not found in content a KeyNotFoundException is thrown. If something goes wrong
+    ///   when casting the root object to type T a JsonException is thrown.
+    /// </summary>
+    /// <param name="key">The key of the root object in the content json</param>
+    /// <typeparam name="T">The data type to convert the root object to</typeparam>
+    /// <returns>The root object with the specified key converted to type T</returns>
+    /// <exception cref="KeyNotFoundException">If the key parameter isn't found in the content json</exception>
+    /// <exception cref="JsonException">If the root object can't be cast to type T</exception>
+    private T GetContentRootObject<T>(string key)
+    {
+        var json = JObject.Parse(_content);
+        if (!json.ContainsKey(key))
+            throw new KeyNotFoundException(key);
+
+        return json[key]!.ToObject<T>() ?? throw new JsonException();
+    }
+
+    /// <summary>
     ///   Parses the content response from a request for a single bar. (i.e. GetLatestBar, GetLatestBars)
     /// </summary>
     /// <returns>A list of the Bars parsed from the response.</returns>
     public List<Bar> ParseBars()
     {
-        // parse the json into a JObject, and the bars attribute to a dict with the symbol and bar
-        JObject json = JObject.Parse(_content);
-        Dictionary<string, Bar> bars = json["bars"]!.ToObject<Dictionary<string, Bar>>() ?? new();
+        // get the root object "bars" from content and cast it as a string (symbol) and Bar dict 
+        var bars = GetContentRootObject<Dictionary<string, Bar>>("bars");
 
-        // make a list of the bars after adding the stock symbol to each bar
+        // make a list of the bars after adding the stock symbol (key) to each bar (value)
         List<Bar> barsList = bars.Select(bar =>
         {
             bar.Value.Symbol = bar.Key;
@@ -57,7 +75,7 @@ public class Response
 
         // return an empty list if bars is null
         if (barsResponse?.Bars == null) return [];
-        
+
         // update the next page token
         token = barsResponse.NextPageToken;
 
@@ -72,9 +90,29 @@ public class Response
                 barsList.Add(bar);
             }
         }
-        
+
         // return the list of bars parsed from the response
         return barsList;
+    }
+
+    /// <summary>
+    ///   Takes a JProperty from a JObject that has the stock symbol as its name and the quote pair data as the value
+    ///   and converts it into a QuotePair.
+    /// </summary>
+    /// <param name="prop">The JProperty that has the symbol as name and quote pair data as value</param>
+    /// <returns>The QuotePair object that was created using the JProperty data</returns>
+    private static QuotePair JPropToQuotePair(JProperty prop)
+    {
+        return new QuotePair(
+            prop.Name,
+            prop.Value<DateTime?>("t") ?? default, // timestamp
+            prop.Value<string>("ax") ?? "", // ask exchange code
+            prop.Value<decimal?>("ap") ?? 0m, // ask price
+            prop.Value<double?>("as") ?? 0.0, // ask size
+            prop.Value<string>("bx") ?? "", // bid exchange code
+            prop.Value<decimal?>("bp") ?? 0m, // bid price
+            prop.Value<double?>("bs") ?? 0.0 // bid size
+        );
     }
 
     /// <summary>
@@ -84,19 +122,11 @@ public class Response
     /// <returns>A list of Quotes, storing the most recent bid and ask for a number of symbols</returns>
     public List<QuotePair> ParseQuotes()
     {
-        // deserialize the response into a QuotesResponse which has a dictionary of symbols and quotes
-        var quotesResponse = JsonSerializer.Deserialize<QuotesResponse>(_content);
-
-        // return an empty list if Quotes is null
-        if (quotesResponse?.Quotes == null) return [];
-
-        // make a list to hold each symbol's Bid quote and Ask quote, and add all the quotes in Quotes to it
-        List<QuotePair> quotesList = new List<QuotePair>();
-        foreach (var (symbol, data) in quotesResponse.Quotes)
-            quotesList.Add(new QuotePair(symbol, data.Timestamp, data.AskExchange, data.AskPrice, data.AskSize,
-                data.BidExchange, data.BidPrice, data.BidSize));
-
-        return quotesList;
+        // get the root object "quotes" from content and cast it as a JObject
+        var quotes = GetContentRootObject<JObject>("quotes");
+        
+        // convert all the properties into QuotePairs using JPropToQuotePair and return them in a list
+        return quotes.Properties().Select(JPropToQuotePair).ToList();
     }
 
     /// <summary>
@@ -108,26 +138,26 @@ public class Response
     {
         // deserialize into a HistoricalQuotesResponse and make a list to hold the new QuotePairs
         var quotesResponse = JsonSerializer.Deserialize<HistoricalQuotesResponse>(_content);
-        
+
         // return an empty list if Quotes is null
         if (quotesResponse?.Quotes == null) return [];
 
         // update the next page token
         token = quotesResponse.NextPageToken;
-        
+
         // make a list to hold each symbol's Ask and Bid quote pairs
         List<QuotePair> quotesList = new List<QuotePair>();
 
         // create a new QuotePair from every QuoteResponse object in the response Quotes
         foreach (QuoteResponse quote in quotesResponse.Quotes)
         {
-            quotesList.Add(new QuotePair(quotesResponse.Symbol, quote.Timestamp, quote.AskExchange, quote.AskPrice, 
+            quotesList.Add(new QuotePair(quotesResponse.Symbol, quote.Timestamp, quote.AskExchange, quote.AskPrice,
                 quote.AskSize, quote.BidExchange, quote.BidPrice, quote.BidSize));
         }
-        
+
         return quotesList;
     }
-    
+
     /// <summary>
     ///   For deserialization of responses from the historical bars endpoint. The response json has one object and
     ///   one string. All the bars information is contained in an object titled "bars". This object holds lists of
@@ -146,12 +176,14 @@ public class Response
         ///   A dictionary of strings as keys and Bars as values. This is what the "bars" json object is deserialized
         ///   into.
         /// </summary>
-        [JsonPropertyName("bars")] public Dictionary<string, List<Bar>> Bars { get; set; }
+        [JsonPropertyName("bars")]
+        public Dictionary<string, List<Bar>> Bars { get; set; }
 
         /// <summary>
         ///   A string holding the next page's token for pagination. This is what "next_page_token" deserializes into.
         /// </summary>
-        [JsonPropertyName("next_page_token")] public string NextPageToken { get; set; }
+        [JsonPropertyName("next_page_token")]
+        public string NextPageToken { get; set; }
     }
 
     /// <summary>
@@ -169,65 +201,58 @@ public class Response
         /// <summary>
         ///   Timestamp for the quotes.
         /// </summary>
-        [JsonPropertyName("t")] public DateTime Timestamp { get; set; }
+        [JsonPropertyName("t")]
+        public DateTime Timestamp { get; set; }
 
         /// <summary>
         ///   An exchange code representing which exchange the ask came from i.e. "N"=NYSE "V"=IEX
         /// </summary>
-        [JsonPropertyName("ax")] public string AskExchange { get; set; }
+        [JsonPropertyName("ax")]
+        public string AskExchange { get; set; }
 
         /// <summary>
         ///   The price for the ask.
         /// </summary>
-        [JsonPropertyName("ap")] public decimal AskPrice { get; set; }
+        [JsonPropertyName("ap")]
+        public decimal AskPrice { get; set; }
 
         /// <summary>
         ///   The number of shares for the ask.
         /// </summary>
-        [JsonPropertyName("as")] public double AskSize { get; set; }
+        [JsonPropertyName("as")]
+        public double AskSize { get; set; }
 
         /// <summary>
         ///   An exchange code representing which exchange the bid came from i.e. "N"=NYSE "V"=IEX
         /// </summary>
-        [JsonPropertyName("bx")] public string BidExchange { get; set; }
+        [JsonPropertyName("bx")]
+        public string BidExchange { get; set; }
 
         /// <summary>
         ///   The price for the bid.
         /// </summary>
-        [JsonPropertyName("bp")] public decimal BidPrice { get; set; }
+        [JsonPropertyName("bp")]
+        public decimal BidPrice { get; set; }
 
         /// <summary>
         ///   The number of shares for the bid.
         /// </summary>
-        [JsonPropertyName("bs")] public double BidSize { get; set; }
-        
+        [JsonPropertyName("bs")]
+        public double BidSize { get; set; }
+
         /// <summary>
         ///   A list of codes representing the quote conditions.
         /// </summary>
-        [JsonPropertyName("c")] public List<string> Conditions { get; set; }
+        [JsonPropertyName("c")]
+        public List<string> Conditions { get; set; }
 
         /// <summary>
         ///   The tape code of the quotes i.e. "A"=NYSE "B"=OTHER "C"=NASDAQ
         /// </summary>
-        [JsonPropertyName("z")] public string Tape { get; set; }
+        [JsonPropertyName("z")]
+        public string Tape { get; set; }
     }
     
-    /// <summary>
-    ///   For deserializing the response from GetLatestQuotes endpoint. The response json has one object called quotes.
-    ///   This object can have one or many objects, with each one being titled a stock ticker. Each stock ticker object
-    ///   holds all the data for the most recent update to the stock's ask or bid quotes. For example:
-    ///   <code>
-    ///     { "quotes" { "AAPL": { quotes info }, "TSLA": { quotes info } } }
-    ///   </code>
-    /// </summary>
-    private class QuotesResponse
-    {
-        /// <summary>
-        ///   Dictionary storing pairs of a stock symbol and most recent quote response.
-        /// </summary>
-        [JsonPropertyName("quotes")]  public Dictionary<string, QuoteResponse> Quotes { get; set; }
-    }
-
     /// <summary>
     ///   For deserialization of responses from the historical quotes endpoint. The response json has three elements:
     ///   a list of quote pairs called quotes, a next_page_token string used for pagination, and a symbol string for
@@ -241,16 +266,19 @@ public class Response
         /// <summary>
         ///   The list of historical quotes for the stock symbol.
         /// </summary>
-        [JsonPropertyName("quotes")] public List<QuoteResponse> Quotes { get; set; }
-        
+        [JsonPropertyName("quotes")]
+        public List<QuoteResponse> Quotes { get; set; }
+
         /// <summary>
         ///   A string holding the next page's token for pagination. This is what "next_page_token" deserializes into.
         /// </summary>
-        [JsonPropertyName("next_page_token")] public string NextPageToken { get; set; }
-        
+        [JsonPropertyName("next_page_token")]
+        public string NextPageToken { get; set; }
+
         /// <summary>
         ///   The symbol that these historical quotes are for.
         /// </summary>
-        [JsonPropertyName("symbol")] public string Symbol { get; set; }
+        [JsonPropertyName("symbol")]
+        public string Symbol { get; set; }
     }
 }
