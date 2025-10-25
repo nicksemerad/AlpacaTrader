@@ -28,6 +28,29 @@ public static class Endpoints
             ? $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}"
             : $"{Data}/{symbols}/{name}/latest";
     }
+    
+    /// <summary>
+    ///   Concatenates all the parameter strings onto the base url with an ampersand ('&') in between each parameter.
+    /// </summary>
+    /// <param name="baseUrl">The first segment of the endpoint url including the symbols parameters</param>
+    /// <param name="parameterStrings">All the other string parameters to add to the endpoint url </param>
+    /// <returns>The endpoint url with all the parameters concatenated together</returns>
+    private static string ConcatUrlParameters(string baseUrl, List<string> parameterStrings)
+    {
+        return $"{baseUrl}&{string.Join("&", parameterStrings)}";
+    }
+
+    /// <summary>
+    ///   Get the api endpoint url to get the account's trading information.
+    /// </summary>
+    /// <returns>The api endpoint url for the account's trading information</returns>
+    public static string Account() => $"{Trade}/v2/account";
+
+    /// <summary>
+    ///   Get the api endpoint url to get the account's assets.
+    /// </summary>
+    /// <returns>The api endpoint url for the account assets</returns>
+    public static string Assets() => $"{Trade}/v2/assets";
 
     /// <summary>
     ///   Get the latest bar for the specified stock ticker symbol(s).
@@ -38,21 +61,13 @@ public static class Endpoints
         => BuildDataEndpointUrl("bars", symbols);
 
     /// <summary>
-    ///   Get the latest snapshot for the specified stock ticker symbol(s).
+    ///   Get the latest bid and ask for the specified stock ticker symbol(s).
     /// </summary>
-    /// <param name="symbols">The ticker symbol(s) to get the latest snapshot for</param>
-    /// <returns>The api endpoint url for the latest snapshot(s)</returns>
-    public static string Snapshots(List<string> symbols)
-        => BuildDataEndpointUrl("snapshots", symbols);
-
-    /// <summary>
-    ///   Get the latest trade for the specified stock ticker symbol(s).
-    /// </summary>
-    /// <param name="symbols">The ticker symbol(s) to get the latest trade for</param>
-    /// <returns>The api endpoint url for the latest trade(s)</returns>
-    public static string LatestTrades(List<string> symbols)
-        => BuildDataEndpointUrl("trades", symbols);
-
+    /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
+    /// <returns>The api endpoint url for the latest quotes</returns>
+    public static string LatestQuotes(List<string> symbols)
+        => $"{Data}/quotes/latest?symbols={string.Join(",", symbols)}";
+    
     /// <summary>
     ///   Builds the endpoint url for the first page of the historical bars in the time from startTime to endTime.
     ///   timeframe is formatted as: [1-59]T, [1-23]H, 1D, 1W, [1,2,3,4,6,12]M
@@ -85,26 +100,4 @@ public static class Endpoints
         return ConcatUrlParameters(baseUrl, parameters);
     }
 
-    /// <summary>
-    ///   Concatenates all the parameter strings onto the base url with an ampersand ('&') in between each parameter.
-    /// </summary>
-    /// <param name="baseUrl">The first segment of the endpoint url including the symbols parameters</param>
-    /// <param name="parameterStrings">All the other string parameters to add to the endpoint url </param>
-    /// <returns>The endpoint url with all the parameters concatenated together</returns>
-    private static string ConcatUrlParameters(string baseUrl, List<string> parameterStrings)
-    {
-        return $"{baseUrl}&{string.Join("&", parameterStrings)}";
-    }
-
-    /// <summary>
-    ///   Get the api endpoint url to get the account's trading information.
-    /// </summary>
-    /// <returns>The api endpoint url for the account's trading information</returns>
-    public static string Account() => $"{Trade}/v2/account";
-
-    /// <summary>
-    ///   Get the api endpoint url to get the account's assets.
-    /// </summary>
-    /// <returns>The api endpoint url for the account assets</returns>
-    public static string Assets() => $"{Trade}/v2/assets";
 }
