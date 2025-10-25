@@ -77,7 +77,7 @@ public class Response
         // try to get the bars as a dictionary of symbols and Bar lists, return an empty list if it fails
         if (!TryGetRootObject<Dictionary<string, List<Bar>>>("bars", out var symbolBars)) return [];
 
-        // if the next_page_token is present in the json update token, else set token as an empty string
+        // if the next_page_token is present in the json, update token, else set token as an empty string
         token = TryGetRootObject<string>("next_page_token", out var nextPageToken)
             ? nextPageToken!
             : string.Empty;
@@ -145,18 +145,18 @@ public class Response
     /// <returns>A list of the QuotePairs(Ask and Bid Quotes) parsed from the response content</returns>
     public List<QuotePair> ParseHistoricalQuotes(ref string token)
     {
-        // try to get the quotes object as a JArray and symbol as a string, return an empty list if either fails
+        // try to get the quotes as a JArray and the symbol as a string, return an empty list if either fails
         if (!TryGetRootObject<JArray>("quotes", out var quotes)
             || !TryGetRootObject<string>("symbol", out var symbol)) return [];
 
-        // if the next_page_token is present in the json update token, else set token as an empty string
+        // if the next_page_token is present in the json, update token, else set token as an empty string
         token = TryGetRootObject<string>("next_page_token", out var nextPageToken)
             ? nextPageToken!
             : string.Empty;
 
         return quotes!.Select(quote =>
         {
-            // use the symbol and array element with the quote data to create a new QuotePair
+            // use the symbol and each array element with quote data to create a new QuotePair
             JObject jObject = (JObject)quote;
             return JObjectToQuotePair(symbol!, jObject);
         }).ToList();
