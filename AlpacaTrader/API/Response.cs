@@ -31,15 +31,18 @@ public class Response
     /// </summary>
     /// <param name="key">The key or name for the desired root object</param>
     /// <param name="rootObject">The root object of type T after it has been retrieved and cast, or null</param>
+    /// <param name="isNullable">If the root object can be null without parsing issues, default false</param>
     /// <typeparam name="T">The type to try and cast the root object to</typeparam>
     /// <returns>True if the retrieval and cast of the object was successful, false if it wasn't</returns>
-    private bool TryGetRootObject<T>(string key, out T? rootObject)
+    private bool TryGetRootObject<T>(string key, out T? rootObject, bool isNullable = false)
     {
-        var json = JObject.Parse(_content);
         try
         {
+            // convert the response content to json, then try to find and cast the object at "key" to a T
+            var json = JObject.Parse(_content);
             rootObject = json[key]!.ToObject<T>();
-            return true;
+            // return false if the rootObject is null and not nullable, else true
+            return !(rootObject is null && !isNullable);
         }
         catch
         {
@@ -49,52 +52,16 @@ public class Response
     }
 
     /// <summary>
-    ///   Parses the content response from a request for a single bar. (i.e. GetLatestBar, GetLatestBars)
+    ///   Private helper method to get the next_page_token from the response content json. If it is present in the json
+    ///   it is returned, else an empty string is returned which will end pagination.
     /// </summary>
-    /// <returns>A list of the Bars parsed from the response.</returns>
-    public List<Bar> ParseBars()
+    /// <returns>The next page token if there is one, else an empty string</returns>
+    private string GetNextPageToken()
     {
-        // try to get the bars from content as a string (symbol) and Bar dict, return an empty list if it fails
-        if (!TryGetRootObject<Dictionary<string, Bar>>("bars", out var bars)) return [];
-
-        // make a list of the bars after adding the stock symbol (key) to each bar (value)
-        List<Bar> barsList = bars!.Select(bar =>
-        {
-            bar.Value.Symbol = bar.Key;
-            return bar.Value;
-        }).ToList();
-
-        return barsList;
-    }
-
-    /// <summary>
-    ///   Parses the content response from a request for historical symbol bars. (i.e. GetHistoricalBar)
-    /// </summary>
-    /// <param name="token">The token reference that points to the next page of Bars</param>
-    /// <returns>A list of the bars parsed from the response content</returns>
-    public List<Bar> ParseHistoricalBars(ref string token)
-    {
-        // try to get the bars as a dictionary of symbols and Bar lists, return an empty list if it fails
-        if (!TryGetRootObject<Dictionary<string, List<Bar>>>("bars", out var symbolBars)) return [];
-
-        // if the next_page_token is present in the json, update token, else set token as an empty string
-        token = TryGetRootObject<string>("next_page_token", out var nextPageToken)
+        // if the next_page_token is present in the json return it, else return an empty string
+        return TryGetRootObject<string>("next_page_token", out var nextPageToken)
             ? nextPageToken!
             : string.Empty;
-
-        // create a list to hold all the bars, then iterate through each symbol's bars
-        List<Bar> barsList = new List<Bar>();
-        foreach (var (symbol, bars) in symbolBars!)
-        {
-            // add the symbol to each bar and add all the bars to barsList
-            barsList.AddRange(bars.Select(bar =>
-            {
-                bar.Symbol = symbol;
-                return bar;
-            }));
-        }
-
-        return barsList;
     }
 
     /// <summary>
@@ -116,7 +83,26 @@ public class Response
             jObject.Value<double?>("bs") ?? 0.0 // bid size
         );
     }
+    
+    /// <summary>
+    ///   Parses the content response from a request for a single bar. (i.e. GetLatestBar, GetLatestBars)
+    /// </summary>
+    /// <returns>A list of the Bars parsed from the response.</returns>
+    public List<Bar> ParseBars()
+    {
+        // try to get the bars from content as a string (symbol) and Bar dict, return an empty list if it fails
+        if (!TryGetRootObject<Dictionary<string, Bar>>("bars", out var bars)) return [];
 
+        // make a list of the bars after adding the stock symbol (key) to each bar (value)
+        List<Bar> barsList = bars!.Select(bar =>
+        {
+            bar.Value.Symbol = bar.Key;
+            return bar.Value;
+        }).ToList();
+
+        return barsList;
+    }
+    
     /// <summary>
     ///   Parses the json response for a single set of Quotes (only most recent bid and ask) for a list of symbols.
     ///   The response is turned into a QuotePair object which holds the symbol, Ask Quote, and Bid Quote.
@@ -137,6 +123,34 @@ public class Response
             return JObjectToQuotePair(symbol, jObject);
         }).ToList();
     }
+    
+    /// <summary>
+    ///   Parses the content response from a request for historical symbol bars. (i.e. GetHistoricalBar)
+    /// </summary>
+    /// <param name="token">The token reference that points to the next page of Bars</param>
+    /// <returns>A list of the bars parsed from the response content</returns>
+    public List<Bar> ParseHistoricalBars(ref string token)
+    {
+        // try to get the bars as a dictionary of symbols and Bar lists, return an empty list if it fails
+        if (!TryGetRootObject<Dictionary<string, List<Bar>>>("bars", out var symbolBars)) return [];
+
+        // if the next_page_token is present in the json, update token, else set token as an empty string
+        token = GetNextPageToken();
+
+        // create a list to hold all the bars, then iterate through each symbol's bars
+        List<Bar> barsList = new List<Bar>();
+        foreach (var (symbol, bars) in symbolBars!)
+        {
+            // add the symbol to each bar and add all the bars to barsList
+            barsList.AddRange(bars.Select(bar =>
+            {
+                bar.Symbol = symbol;
+                return bar;
+            }));
+        }
+
+        return barsList;
+    }
 
     /// <summary>
     ///   Parses the content response from a request for a symbol's historical quotes. (i.e. GetHistoricalQuotes)
@@ -150,9 +164,7 @@ public class Response
             || !TryGetRootObject<string>("symbol", out var symbol)) return [];
 
         // if the next_page_token is present in the json, update token, else set token as an empty string
-        token = TryGetRootObject<string>("next_page_token", out var nextPageToken)
-            ? nextPageToken!
-            : string.Empty;
+        token = GetNextPageToken();
 
         return quotes!.Select(quote =>
         {

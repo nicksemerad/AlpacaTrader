@@ -18,6 +18,27 @@ public class Client
     private delegate List<T> ResponseParser<T>(Response r);
     
     /// <summary>
+    ///   This delegate is similar to a ResponseParser but has an additional parameter, which is a string holding the
+    ///   next page token, passed by reference. This lets the parser update the reference for the next page token that
+    ///   is passed into it, enabling pagination while parsing response content.
+    /// </summary>
+    /// <typeparam name="T">The type of object that the response is parsed into a list of</typeparam>
+    private delegate List<T> PaginatedResponseParser<T>(Response r, ref string token);
+
+    /// <summary>
+    ///   This method takes in an endpoint url and returns a new response object with the json content returned from
+    ///   the endpoint request.
+    /// </summary>
+    /// <param name="url">The url to request and return in a Response</param>
+    /// <returns>A response object with the json content returned by the request</returns>
+    private static async Task<Response> UrlToResponse(string url)
+    {
+        Request request = new Request(url);
+        string content = await request.GetAsync();
+        return new Response(content);
+    }
+    
+    /// <summary>
     ///   This private helper method handles the process that takes a specific endpoint url, requests it, gets the
     ///   response, and parses the response content, before returning a list of the parsed elements. This method takes
     ///   two parameters: one for the endpoint url being requested and one for a ResponseParser delegate that will be
@@ -29,12 +50,35 @@ public class Client
     /// <returns>A list of the T elements that were parsed from the URL response json</returns>
     private static async Task<List<T>> UrlToParsedResponse<T>(string url, ResponseParser<T> parser)
     {
-        Request request = new Request(url);
-        string content = await request.GetAsync();
-        Response res = new Response(content);
-        return parser(res);
+        return parser(await UrlToResponse(url));
     }
     
+    /// <summary>
+    ///   Using the url and a specified function to parse the results with, request the first page of the endpoint and
+    ///   use the next page token in the response to request the next page, and repeat until there are no next pages.
+    /// </summary>
+    /// <param name="url">The url of the first page of the endpoint data</param>
+    /// <param name="parser">The function to parse the endpoint responses with</param>
+    /// <typeparam name="T">The type of data in the list that is parsed from the endpoint</typeparam>
+    /// <returns>A list with all the collected elements from the endpoint</returns>
+    private static async Task<List<T>> UrlToParsedPaginatedResponse<T>(string url, PaginatedResponseParser<T> parser)
+    {
+        // parse the first page using the parser and set the result as a new list, parser will update the token
+        string token = string.Empty;
+        List<T> listOfTs = parser(await UrlToResponse(url), ref token);
+
+        // as long as the previous response had a next page token, add the token to the url, parse the response which
+        // updates token and add the parsed T items to the list
+        while (!string.IsNullOrEmpty(token))
+        {
+            Response r = await UrlToResponse(Endpoints.AddPaginationToken(url, token));
+            listOfTs.AddRange(parser(r, ref token));
+        }
+        
+        // all the paginated data pages have been collected, return the final list
+        return  listOfTs;
+    }
+
     /// <summary>
     ///   Gets a list of the most recent Bars for the specified stock symbols The endpoint url is constructed,
     ///   requested, and parsed into the returned List of Bars.
@@ -43,9 +87,9 @@ public class Client
     /// <returns>A list of all the latest Bars returned from the endpoint</returns>
     public static async Task<List<Bar>> GetLatestBars(List<string> symbols)
     {
-        return await UrlToParsedResponse<Bar>(Endpoints.LatestBars(symbols), r=>r.ParseBars());
+        return await UrlToParsedResponse<Bar>(Endpoints.LatestBars(symbols), r => r.ParseBars());
     }
-    
+
     /// <summary>
     ///   Gets a list of the most recent QuotePairs (ask and bid) for the specified stock symbols. The endpoint url
     ///   is constructed, requested, and parsed into the returned List of QuotePairs.
@@ -54,7 +98,7 @@ public class Client
     /// <returns>A list of all the latest QuotePairs returned from the endpoint</returns>
     public static async Task<List<QuotePair>> GetLatestQuotes(List<string> symbols)
     {
-        return await UrlToParsedResponse<QuotePair>(Endpoints.LatestQuotes(symbols), r=>r.ParseQuotes());
+        return await UrlToParsedResponse<QuotePair>(Endpoints.LatestQuotes(symbols), r => r.ParseQuotes());
     }
 
     /// <summary>
@@ -73,28 +117,10 @@ public class Client
     public static async Task<List<Bar>> GetHistoricalBars(string symbol, string timeframe, DateTime startTime,
         DateTime endTime)
     {
-        // start with no nextPageToken and an empty list of bars
-        string nextPageToken = string.Empty;
-        List<Bar> bars = new List<Bar>();
-        
-        // starting with no nextPageToken, request the first page holding the historical bars and the next
-        // nextPageToken. Update nextPageToken and request again. This is repeated until there are no more pages and
-        // all the historical bars have been retrieved.
-        do 
-        { 
-            string endpointUrl = Endpoints.HistoricalBars(symbol, timeframe, startTime, endTime, nextPageToken);
-            Request request = new Request(endpointUrl);
-            string content = await request.GetAsync();
-            Response res = new Response(content);
-        
-            // parse all the bars from the response and add them to the bars list. The nextPageToken ref
-            // is passed to the parse method so it can be updated to the new next page token
-            bars.AddRange(res.ParseHistoricalBars(ref nextPageToken));
-            
-        } while (!string.IsNullOrEmpty(nextPageToken));
-    
-        // return the list holding all the historical bars
-        return bars;
+        return await UrlToParsedPaginatedResponse<Bar>(
+            Endpoints.HistoricalBars(symbol, timeframe, startTime, endTime),
+            (Response r, ref string token) => r.ParseHistoricalBars(ref token)
+            );
     }
 
     /// <summary>
@@ -107,41 +133,75 @@ public class Client
     /// <returns>A list holding all the scraped historical quote pairs for the symbol</returns>
     public static async Task<List<QuotePair>> GetHistoricalQuotes(string symbol, DateTime startTime, DateTime endTime)
     {
-        // start with no nextPageToken and an empty list of quote pairs
-        string nextPageToken = string.Empty;
-        List<QuotePair> quotePairs = new List<QuotePair>();
-        
-        // starting with no nextPageToken, request the first page holding the historical quotes and the next
-        // nextPageToken. Update nextPageToken and request again. This is repeated until there are no more pages and
-        // all the historical quotes have been retrieved.
-        do 
-        { 
-            string endpointUrl = Endpoints.HistoricalQuotes(symbol, startTime, endTime, nextPageToken);
-            Request request = new Request(endpointUrl);
-            string content = await request.GetAsync();
-            Response res = new Response(content);
-            
-            // parse all the quotes from the response and add them to the quotes list. The nextPageToken ref
-            // is passed to the parse method so it can be updated to the new next page token
-            quotePairs.AddRange(res.ParseHistoricalQuotes(ref nextPageToken));
-            
-        } while (!string.IsNullOrEmpty(nextPageToken));
+        return await UrlToParsedPaginatedResponse<QuotePair>(
+            Endpoints.HistoricalQuotes(symbol, startTime, endTime),
+            (Response r, ref string token) => r.ParseHistoricalQuotes(ref token)
+        );
+    }
     
-        // return the list holding all the historical quote pairs
-        return quotePairs;
+
+    public static async Task Main(string[] args)
+    {
+        
+        await HistoricalSample();
+        // await LatestSample();
+
     }
 
-    
-    public static async Task Main(string[] args)
+    private static async Task HistoricalSample()
+    {
+        DateTime end = DateTime.Today.AddDays(-2), start = end.AddHours(-1);
+
+        List<Bar> bars = await GetHistoricalBars("AAPL", "12H", start, end);
+        Console.WriteLine($"\nTotal scraped bars: {bars.Count}");
+        foreach (Bar bar in bars.Take(1))
+            Console.WriteLine(bar);
+        
+        List<QuotePair> quotes = await GetHistoricalQuotes("AAPL", start, end);
+        Console.WriteLine($"\nTotal scraped quote pairs: {quotes.Count}");
+        foreach (QuotePair quote in quotes.Take(1))
+            Console.WriteLine(quote);
+    }
+
+    private static async Task LatestSample()
     {
         List<Bar> bars = await GetLatestBars(["AAPL"]);
         Console.WriteLine($"\nTotal scraped quote pairs: {bars.Count}");
         foreach (Bar bar in bars.Take(1))
             Console.WriteLine(bar);
-        
+
         List<QuotePair> quotes = await GetLatestQuotes(["AAPL"]);
         Console.WriteLine($"\nTotal scraped quote pairs: {bars.Count}");
         foreach (QuotePair quote in quotes.Take(1))
             Console.WriteLine(quote);
+    }
+
+    private static async Task DatabaseSample()
+    {
+        // Connect to the database first
+        Console.WriteLine("Connecting to database");
+        var dbConnection = new TradingDbConnection();
+        if (!await dbConnection.IsDbConnectedAsync())
+            return;
+
+        Console.WriteLine("\nInitializing database");
+        await dbConnection.InitializeDatabaseAsync();
+
+        Console.WriteLine("\nScraping bars");
+        DateTime start = DateTime.Today.AddDays(-5), end = DateTime.Today;
+        List<Bar> bars = await GetHistoricalBars("AAPL", "12H", start, end);
+        Console.WriteLine($"\nTotal scraped bars: {bars.Count}");
+
+        Console.WriteLine("\nSaving bars to database");
+        var barOps = new BarOperations();
+        await barOps.InsertBarsAsync(bars);
+        Console.WriteLine("Bars saved");
+
+        Console.WriteLine("\nGetting bars from database");
+        var dbBars = await barOps.GetBarsBySymbolAsync("AAPL", start, end);
+        Console.WriteLine($"Total bars in database: {dbBars.Count}");
+
+        foreach (Bar bar in dbBars.Take(3))
+            Console.WriteLine(bar.ToString());
     }
 }

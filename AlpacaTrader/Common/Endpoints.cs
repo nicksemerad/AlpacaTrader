@@ -57,7 +57,7 @@ public static class Endpoints
             ..additionalParams ?? [],
             $"start={DateFormats.Url(startTime)}",
             $"end={DateFormats.Url(endTime)}",
-            "limit=10000"
+            "limit=50"
         ];
 
         // add the next page token if one was passed
@@ -138,5 +138,16 @@ public static class Endpoints
     {
         // the quotes endpoint has no additional params, so just return the string result from HistoricalUrl 
         return HistoricalUrl($"{Data}/{symbol}/quotes", startTime, endTime, nextPageToken);
+    }
+
+    /// <summary>
+    ///   A simple function that takes in a fully formed endpoint url and appends a next page token to the end of it.
+    /// </summary>
+    /// <param name="builtUrl">The full endpoint url for the first page, with no pagination token</param>
+    /// <param name="nextPageToken">The pagination token to add to the url</param>
+    /// <returns>The endpoint url with the pagination token pointing to the next page of data</returns>
+    public static string AddPaginationToken(string builtUrl, string nextPageToken)
+    {
+        return $"{builtUrl}&page_token={nextPageToken}";
     }
 }
