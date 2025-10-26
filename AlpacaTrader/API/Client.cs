@@ -10,16 +10,24 @@ namespace API;
 public class Client
 {
     /// <summary>
+    ///   This delegate represents a function using type T that takes in a Response object as its parameter and
+    ///   returns a List of type T. This is intended to be used with Response class methods that parse a Response's
+    ///   content into a list of whatever type the endpoint response's json represents.
+    /// </summary>
+    /// <typeparam name="T">The type of object that the response is parsed into a list of</typeparam>
+    private delegate List<T> ResponseParser<T>(Response r);
+    
+    /// <summary>
     ///   This private helper method handles the process that takes a specific endpoint url, requests it, gets the
     ///   response, and parses the response content, before returning a list of the parsed elements. This method takes
-    ///   two parameters, one for the endpoint url being requested, and one for the function used to parse the
-    ///   response json.
+    ///   two parameters: one for the endpoint url being requested and one for a ResponseParser delegate that will be
+    ///   used to parse the response json.
     /// </summary>
     /// <param name="url">The url to request and parse the response from</param>
     /// <param name="parser">A function that takes in a Response and returns a List of type T</param>
     /// <typeparam name="T">The data type of the objects that the endpoint returns a list of</typeparam>
     /// <returns>A list of the T elements that were parsed from the URL response json</returns>
-    private static async Task<List<T>> UrlToParsedResponse<T>(string url, Func<Response, List<T>> parser)
+    private static async Task<List<T>> UrlToParsedResponse<T>(string url, ResponseParser<T> parser)
     {
         Request request = new Request(url);
         string content = await request.GetAsync();
