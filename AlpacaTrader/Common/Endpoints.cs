@@ -59,10 +59,6 @@ public static class Endpoints
             "limit=10000"
         ];
 
-        // add the next page token if one was passed
-        // if (!string.IsNullOrEmpty(nextPageToken))
-        //     urlParams.Add($"page_token={nextPageToken}");
-
         // return the url with the parameters concatenated to the base
         return ConcatUrlParameters(baseUrl, urlParams);
     }
