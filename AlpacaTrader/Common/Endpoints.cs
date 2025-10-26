@@ -56,7 +56,7 @@ public static class Endpoints
             ..additionalParams ?? [],
             $"start={DateFormats.Url(startTime)}",
             $"end={DateFormats.Url(endTime)}",
-            "limit=50"
+            "limit=10000"
         ];
 
         // add the next page token if one was passed
