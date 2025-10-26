@@ -21,7 +21,7 @@ public static class Endpoints
     /// <param name="name">The name of the desired endpoint data i.e. bars, quotes, etc</param>
     /// <param name="symbols">The stock ticker symbol(s) to get the data for</param>
     /// <returns>The full api endpoint url for the parameters</returns>
-    private static string BuildDataEndpointUrl(string name, List<string> symbols)
+    private static string LatestUrl(string name, List<string> symbols)
     {
         return $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}";
     }
@@ -35,6 +35,37 @@ public static class Endpoints
     private static string ConcatUrlParameters(string baseUrl, List<string> parameterStrings)
     {
         return $"{baseUrl}?{string.Join("&", parameterStrings)}";
+    }
+    
+    /// <summary>
+    ///   Creates the url for a historical type endpoint. The returned url is composed of a base url, start and end
+    ///   DateTimes which all historical endpoints need, a limit of the maximum items per page response, the next page
+    ///   token (if there is one), and any additional parameters that an endpoint may need.
+    /// </summary>
+    /// <param name="baseUrl">The base url with the specific data endpoint name</param>
+    /// <param name="startTime">DateTime the historical quotes start at</param>
+    /// <param name="endTime">DateTime the historical quotes will end at</param>
+    /// <param name="nextPageToken">The token needed to request the next page or null if there isn't one</param>
+    /// <param name="additionalParams">A list of additional parameters that the endpoint url requires</param>
+    /// <returns>The constructed url for the specific endpoint with all the necessary parameters</returns>
+    private static string HistoricalUrl(string baseUrl, DateTime startTime, DateTime endTime,
+        string? nextPageToken, List<string>? additionalParams = null)
+    {
+        // make a new list with any additionalParams, add the time range and max items/ page params
+        List<string> urlParams =
+        [
+            ..additionalParams ?? [],
+            $"start={DateFormats.Url(startTime)}",
+            $"end={DateFormats.Url(endTime)}",
+            "limit=10000"
+        ];
+
+        // add the next page token if one was passed
+        if (!string.IsNullOrEmpty(nextPageToken))
+            urlParams.Add($"page_token={nextPageToken}");
+
+        // return the url with the parameters concatenated to the base
+        return ConcatUrlParameters(baseUrl, urlParams);
     }
 
     /// <summary>
@@ -54,8 +85,14 @@ public static class Endpoints
     /// </summary>
     /// <param name="symbols">The ticker symbol(s) to get the latest bar for</param>
     /// <returns>The api endpoint url for the latest bar(s)</returns>
-    public static string LatestBars(List<string> symbols)
-        => BuildDataEndpointUrl("bars", symbols);
+    public static string LatestBars(List<string> symbols) => LatestUrl("bars", symbols);
+
+    /// <summary>
+    ///   Get the latest bid and ask quotes for the specified stock ticker symbol(s).
+    /// </summary>
+    /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
+    /// <returns>The api endpoint url for the latest quotes</returns>
+    public static string LatestQuotes(List<string> symbols) => LatestUrl("quotes", symbols);
 
     /// <summary>
     ///   Builds the endpoint url for a single page of the historical bars in the time from startTime to endTime for
@@ -88,14 +125,6 @@ public static class Endpoints
     }
 
     /// <summary>
-    ///   Get the latest bid and ask quotes for the specified stock ticker symbol(s).
-    /// </summary>
-    /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
-    /// <returns>The api endpoint url for the latest quotes</returns>
-    public static string LatestQuotes(List<string> symbols)
-        => BuildDataEndpointUrl("quotes", symbols);
-
-    /// <summary>
     ///   Builds the endpoint url for a single page of the historical quotes in the time from startTime to endTime for
     ///   the specified stock symbol.
     /// </summary>
@@ -109,36 +138,5 @@ public static class Endpoints
     {
         // the quotes endpoint has no additional params, so just return the string result from HistoricalUrl 
         return HistoricalUrl($"{Data}/{symbol}/quotes", startTime, endTime, nextPageToken);
-    }
-
-    /// <summary>
-    ///   Creates the url for a historical type endpoint. The returned url is composed of a base url, start and end
-    ///   DateTimes which all historical endpoints need, a limit of the maximum items per page response, the next page
-    ///   token (if there is one), and any additional parameters that an endpoint may need.
-    /// </summary>
-    /// <param name="baseUrl">The base url with the specific data endpoint name</param>
-    /// <param name="startTime">DateTime the historical quotes start at</param>
-    /// <param name="endTime">DateTime the historical quotes will end at</param>
-    /// <param name="nextPageToken">The token needed to request the next page or null if there isn't one</param>
-    /// <param name="additionalParams">A list of additional parameters that the endpoint url requires</param>
-    /// <returns>The constructed url for the specific endpoint with all the necessary parameters</returns>
-    private static string HistoricalUrl(string baseUrl, DateTime startTime, DateTime endTime,
-        string? nextPageToken, List<string>? additionalParams = null)
-    {
-        // make a new list with any additionalParams, add the time range and max items/ page params
-        List<string> urlParams =
-        [
-            ..additionalParams ?? [],
-            $"start={DateFormats.Url(startTime)}",
-            $"end={DateFormats.Url(endTime)}",
-            "limit=10000"
-        ];
-
-        // add the next page token if one was passed
-        if (!string.IsNullOrEmpty(nextPageToken))
-            urlParams.Add($"page_token={nextPageToken}");
-
-        // return the url with the parameters concatenated to the base
-        return ConcatUrlParameters(baseUrl, urlParams);
     }
 }
