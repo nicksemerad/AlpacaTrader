@@ -1,7 +1,6 @@
 using Common;
 using Component;
 using Database;
-using DbConnection = System.Data.Common.DbConnection;
 
 namespace API;
 
@@ -11,16 +10,43 @@ namespace API;
 public class Client
 {
     /// <summary>
-    ///   Gets a list of Bars that is retrieved from the LatestBars api endpoint for the provided symbols.
+    ///   This private helper method handles the process that takes a specific endpoint url, requests it, gets the
+    ///   response, and parses the response content, before returning a list of the parsed elements. This method takes
+    ///   two parameters, one for the endpoint url being requested, and one for the function used to parse the
+    ///   response json.
     /// </summary>
-    /// <param name="symbols">The stock ticker symbols to get the data for</param>
-    /// <returns>A list of all the bars returned from the endpoint</returns>
-    public async Task<List<Bar>> GetLatestBars(List<string> symbols)
+    /// <param name="url">The url to request and parse the response from</param>
+    /// <param name="parser">A function that takes in a Response and returns a List of type T</param>
+    /// <typeparam name="T">The data type of the objects that the endpoint returns a list of</typeparam>
+    /// <returns>A list of the T elements that were parsed from the URL response json</returns>
+    private static async Task<List<T>> UrlToParsedResponse<T>(string url, Func<Response, List<T>> parser)
     {
-        Request request = new Request(Endpoints.LatestBars(symbols));
+        Request request = new Request(url);
         string content = await request.GetAsync();
         Response res = new Response(content);
-        return res.ParseBars();
+        return parser(res);
+    }
+    
+    /// <summary>
+    ///   Gets a list of the most recent Bars for the specified stock symbols The endpoint url is constructed,
+    ///   requested, and parsed into the returned List of Bars.
+    /// </summary>
+    /// <param name="symbols">The stock ticker symbols to get the data for</param>
+    /// <returns>A list of all the latest Bars returned from the endpoint</returns>
+    public static async Task<List<Bar>> GetLatestBars(List<string> symbols)
+    {
+        return await UrlToParsedResponse<Bar>(Endpoints.LatestBars(symbols), r=>r.ParseBars());
+    }
+    
+    /// <summary>
+    ///   Gets a list of the most recent QuotePairs (ask and bid) for the specified stock symbols. The endpoint url
+    ///   is constructed, requested, and parsed into the returned List of QuotePairs.
+    /// </summary>
+    /// <param name="symbols">The symbols to get the quotes for</param>
+    /// <returns>A list of all the latest QuotePairs returned from the endpoint</returns>
+    public static async Task<List<QuotePair>> GetLatestQuotes(List<string> symbols)
+    {
+        return await UrlToParsedResponse<QuotePair>(Endpoints.LatestQuotes(symbols), r=>r.ParseQuotes());
     }
 
     /// <summary>
@@ -36,7 +62,7 @@ public class Client
     /// <param name="startTime">DateTime the historical bars start at</param>
     /// <param name="endTime">DateTime the historical bars will end at</param>
     /// <returns>A list holding all the scraped historical bars for the symbol</returns>
-    public async Task<List<Bar>> GetHistoricalBars(string symbol, string timeframe, DateTime startTime,
+    public static async Task<List<Bar>> GetHistoricalBars(string symbol, string timeframe, DateTime startTime,
         DateTime endTime)
     {
         // start with no nextPageToken and an empty list of bars
@@ -62,18 +88,6 @@ public class Client
         // return the list holding all the historical bars
         return bars;
     }
-    
-    /// <summary>
-    ///   Get the latest bid and ask quotes for the symbols.
-    /// </summary>
-    /// <param name="symbols">The symbols to get the quotes for</param>
-    public async Task<List<QuotePair>> GetLatestQuotes(List<string> symbols)
-    {
-        Request request = new Request(Endpoints.LatestQuotes(symbols));
-        string content = await request.GetAsync();
-        Response res = new Response(content);
-        return res.ParseQuotes();
-    }
 
     /// <summary>
     ///   Uses the Historical Quotes API endpoint to get all the Quotes for the symbol that were made during the time
@@ -83,8 +97,7 @@ public class Client
     /// <param name="startTime">DateTime the historical quotes should start at</param>
     /// <param name="endTime">DateTime the historical quotes should end at</param>
     /// <returns>A list holding all the scraped historical quote pairs for the symbol</returns>
-    public async Task<List<QuotePair>> GetHistoricalQuotes(string symbol, DateTime startTime,
-        DateTime endTime)
+    public static async Task<List<QuotePair>> GetHistoricalQuotes(string symbol, DateTime startTime, DateTime endTime)
     {
         // start with no nextPageToken and an empty list of quote pairs
         string nextPageToken = string.Empty;
@@ -109,17 +122,18 @@ public class Client
         // return the list holding all the historical quote pairs
         return quotePairs;
     }
+
     
     public static async Task Main(string[] args)
     {
-        Client client = new Client();
-        DateTime start = DateTime.Today.AddHours(-1), end = DateTime.Today;
+        List<Bar> bars = await GetLatestBars(["AAPL"]);
+        Console.WriteLine($"\nTotal scraped quote pairs: {bars.Count}");
+        foreach (Bar bar in bars.Take(1))
+            Console.WriteLine(bar);
         
-        List<QuotePair> quotes = await client.GetHistoricalQuotes("AAPL", start, end);
-        Console.WriteLine($"\nTotal scraped quote pairs: {quotes.Count}");
-        
-        foreach (QuotePair quote in quotes.Take(5))
+        List<QuotePair> quotes = await GetLatestQuotes(["AAPL"]);
+        Console.WriteLine($"\nTotal scraped quote pairs: {bars.Count}");
+        foreach (QuotePair quote in quotes.Take(1))
             Console.WriteLine(quote);
-        
     }
 }
