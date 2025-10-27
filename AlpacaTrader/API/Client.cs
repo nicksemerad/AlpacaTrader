@@ -16,7 +16,7 @@ public class Client
     /// </summary>
     /// <typeparam name="T">The type of object that the response is parsed into a list of</typeparam>
     private delegate List<T> ResponseParser<T>(Response r);
-    
+
     /// <summary>
     ///   This delegate is similar to a ResponseParser but has an additional parameter, which is a string holding the
     ///   next page token, passed by reference. This lets the parser update the reference for the next page token that
@@ -39,21 +39,6 @@ public class Client
     }
     
     /// <summary>
-    ///   This private helper method handles the process that takes a specific endpoint url, requests it, gets the
-    ///   response, and parses the response content, before returning a list of the parsed elements. This method takes
-    ///   two parameters: one for the endpoint url being requested and one for a ResponseParser delegate that will be
-    ///   used to parse the response json.
-    /// </summary>
-    /// <param name="url">The url to request and parse the response from</param>
-    /// <param name="parser">A function that takes in a Response and returns a List of type T</param>
-    /// <typeparam name="T">The data type of the objects that the endpoint returns a list of</typeparam>
-    /// <returns>A list of the T elements that were parsed from the URL response json</returns>
-    private static async Task<List<T>> UrlToParsedResponse<T>(string url, ResponseParser<T> parser)
-    {
-        return parser(await UrlToResponse(url));
-    }
-    
-    /// <summary>
     ///   Using the url and a specified function to parse the results with, request the first page of the endpoint and
     ///   use the next page token in the response to request the next page, and repeat until there are no next pages.
     /// </summary>
@@ -67,16 +52,16 @@ public class Client
         string token = string.Empty;
         List<T> listOfTs = parser(await UrlToResponse(url), ref token);
 
-        // as long as the previous response had a next page token, add the token to the url, parse the response which
-        // updates token and add the parsed T items to the list
+        // as long as the previous response had a next page token, add the token to the url and parse the response
+        // (which updates token) and add the parsed T items to the list
         while (!string.IsNullOrEmpty(token))
         {
             Response r = await UrlToResponse(Endpoints.AddPaginationToken(url, token));
             listOfTs.AddRange(parser(r, ref token));
         }
-        
+
         // all the paginated data pages have been collected, return the final list
-        return  listOfTs;
+        return listOfTs;
     }
 
     /// <summary>
@@ -87,7 +72,7 @@ public class Client
     /// <returns>A list of all the latest Bars returned from the endpoint</returns>
     public static async Task<List<Bar>> GetLatestBars(List<string> symbols)
     {
-        return await UrlToParsedResponse<Bar>(Endpoints.LatestBars(symbols), r => r.ParseBars());
+        return (await UrlToResponse(Endpoints.LatestBars(symbols))).ParseBars();
     }
 
     /// <summary>
@@ -98,7 +83,7 @@ public class Client
     /// <returns>A list of all the latest QuotePairs returned from the endpoint</returns>
     public static async Task<List<QuotePair>> GetLatestQuotes(List<string> symbols)
     {
-        return await UrlToParsedResponse<QuotePair>(Endpoints.LatestQuotes(symbols), r => r.ParseQuotes());
+        return (await UrlToResponse(Endpoints.LatestQuotes(symbols))).ParseQuotes();
     }
 
     /// <summary>
@@ -117,10 +102,10 @@ public class Client
     public static async Task<List<Bar>> GetHistoricalBars(string symbol, string timeframe, DateTime startTime,
         DateTime endTime)
     {
-        return await UrlToParsedPaginatedResponse<Bar>(
+        return await UrlToParsedPaginatedResponse(
             Endpoints.HistoricalBars(symbol, timeframe, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalBars(ref token)
-            );
+        );
     }
 
     /// <summary>
@@ -133,19 +118,18 @@ public class Client
     /// <returns>A list holding all the scraped historical quote pairs for the symbol</returns>
     public static async Task<List<QuotePair>> GetHistoricalQuotes(string symbol, DateTime startTime, DateTime endTime)
     {
-        return await UrlToParsedPaginatedResponse<QuotePair>(
+        return await UrlToParsedPaginatedResponse(
             Endpoints.HistoricalQuotes(symbol, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalQuotes(ref token)
         );
     }
-    
+
 
     public static async Task Main(string[] args)
     {
-        
         await HistoricalSample();
         // await LatestSample();
-
+        // await DatabaseSample();
     }
 
     private static async Task HistoricalSample()
@@ -156,7 +140,7 @@ public class Client
         Console.WriteLine($"\nTotal scraped bars: {bars.Count}");
         foreach (Bar bar in bars.Take(1))
             Console.WriteLine(bar);
-        
+
         List<QuotePair> quotes = await GetHistoricalQuotes("AAPL", start, end);
         Console.WriteLine($"\nTotal scraped quote pairs: {quotes.Count}");
         foreach (QuotePair quote in quotes.Take(1))
