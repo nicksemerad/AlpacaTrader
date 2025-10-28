@@ -28,17 +28,16 @@ public class Request
         var opts = new RestClientOptions(url);
         _client = new RestClient(opts);
         _request = new RestRequest();
-        AddHeaders(_request);
+        AddHeaders();
     }
 
     /// <summary>
     ///   Using the Configuration package the Alpaca API Secret-Key and API-Key are retrieved from project user
-    ///   secrets. The two authentication headers are made with these keys and added to the RestRequest. A final
+    ///   secrets. The two authentication headers are made with these keys and added to _request. A final
     ///   header is added to accept json. If either private keys failed to be retrieved an ArgumentException is thrown.
     /// </summary>
-    /// <param name="request">The RestRequest object to add the headers to</param>
     /// <exception cref="ArgumentException">Throws if the secrets fail to be retrieved</exception>
-    private static void AddHeaders(RestRequest request)
+    private void AddHeaders()
     {
         // get the user secrets configuration
         IConfiguration configuration = new ConfigurationBuilder()
@@ -54,9 +53,9 @@ public class Request
             throw new ArgumentException("Alpaca api key or private key not found.");
 
         // add the headers
-        request.AddHeader("APCA-API-KEY-ID", apiKey);
-        request.AddHeader("APCA-API-SECRET-KEY", secretKey);
-        request.AddHeader("accept", "application/json");
+        _request.AddHeader("APCA-API-KEY-ID", apiKey);
+        _request.AddHeader("APCA-API-SECRET-KEY", secretKey);
+        _request.AddHeader("accept", "application/json");
     }
 
     /// <summary>
@@ -67,8 +66,8 @@ public class Request
     /// <returns>The Request response's content string, or an empty string if there was no response content</returns>
     public async Task<string> GetAsync()
     {
-        // log the request to the console
         var response = await _client.GetAsync(_request);
+        // log the request to the console
         Console.WriteLine($"REQUEST: {_client.Options.BaseUrl?.ToString()} STATUS: {response.StatusCode}");
         return response.Content ?? string.Empty;
     }
