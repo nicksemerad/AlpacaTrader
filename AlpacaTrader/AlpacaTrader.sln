@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{5E9C1289-D70E-4BDD-9D18-D98F2DCC21E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrategyTests", "StrategyTests\StrategyTests.csproj", "{F53DF500-DFBA-441F-B108-451628552A78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indicators", "Indicators\Indicators.csproj", "{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,9 +44,9 @@ Global
 		{5E9C1289-D70E-4BDD-9D18-D98F2DCC21E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E9C1289-D70E-4BDD-9D18-D98F2DCC21E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E9C1289-D70E-4BDD-9D18-D98F2DCC21E4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F53DF500-DFBA-441F-B108-451628552A78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F53DF500-DFBA-441F-B108-451628552A78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F53DF500-DFBA-441F-B108-451628552A78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F53DF500-DFBA-441F-B108-451628552A78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
