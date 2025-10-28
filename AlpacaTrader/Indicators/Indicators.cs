@@ -2,6 +2,7 @@
 using Skender.Stock.Indicators;
 
 namespace Indicators;
+
 /// <summary>
 ///   This class handles stock price indicators' calculations so they can be used in strategies, visualizations,
 ///   backtesting, etc.

@@ -36,7 +36,7 @@ public static class Endpoints
     {
         return $"{baseUrl}?{string.Join("&", parameterStrings)}";
     }
-    
+
     /// <summary>
     ///   Creates the url for a historical type endpoint. The returned url is composed of a base url, start and end
     ///   DateTimes which all historical endpoints need, a limit of the maximum items per page response, the next page

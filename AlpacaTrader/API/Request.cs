@@ -12,12 +12,12 @@ public class Request
     ///   The RestClient object that will be used to make the request.
     /// </summary>
     private readonly RestClient _client;
-    
+
     /// <summary>
     ///   The RestRequest object requested by the _client.
     /// </summary>
     private readonly RestRequest _request;
-    
+
     /// <summary>
     ///   Builds a new Request for the url. Headers for the alpaca secret key and api key are added, as well as a
     ///   header stating to accept json responses.
@@ -70,6 +70,6 @@ public class Request
         // log the request to the console
         RestResponse response = await _client.GetAsync(_request);
         Console.WriteLine($"REQUEST: {_client.Options.BaseUrl?.ToString()} STATUS: {response.StatusCode}");
-        return response.Content ??  string.Empty;
+        return response.Content ?? string.Empty;
     }
 }

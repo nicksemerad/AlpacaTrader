@@ -13,39 +13,39 @@ public class Order
     /// </summary>
     [JsonPropertyName("order_id")]
     public string OrderId { get; set; }
-    
+
     /// <summary>
     ///   The symbol that this order is for. This field is
     ///   required when creating a new order via Alpaca API.
     /// </summary>
     [JsonPropertyName("symbol")]
     public string Symbol { get; set; }
-    
+
     /// <summary>
     ///   The quantity or number of shares that this order is for.
     /// </summary>
     [JsonPropertyName("qty")]
     public double Quantity { get; set; }
-    
+
     /// <summary>
     ///   The quantity or number of shares that have been filled so far.
     /// </summary>
     [JsonPropertyName("filled_qty")]
     public double FilledQuantity { get; set; }
-    
+
     /// <summary>
     ///   The dollar amount that this order is for. Can only use this if not using Quantity.
     /// </summary>
     [JsonPropertyName("notional")]
     public decimal Notional { get; set; }
-    
+
     /// <summary>
     ///   The side of this order. Either Buy or Sell. This field
     ///   is required when creating a new order via Alpaca API.
     /// </summary>
     [JsonPropertyName("side")]
     public OrderSide Side { get; set; }
-    
+
     /// <summary>
     ///   The type of this order. Can be one of the 5 order types mentioned below.
     ///   <code>
@@ -57,7 +57,7 @@ public class Order
     /// </summary>
     [JsonPropertyName("type")]
     public OrderType OrderType { get; set; }
-    
+
     /// <summary>
     ///   The conditions or length of time that this order is valid for. Can be one of the 6 options below.
     ///   <list type="bullet">
@@ -72,13 +72,13 @@ public class Order
     /// </summary>
     [JsonPropertyName("time_in_force")]
     public TimeInForce TimeInForce { get; set; }
-    
+
     /// <summary>
     ///   The price that the order should be filled at, or better. This is needed for limit and stop limit orders.
     /// </summary>
     [JsonPropertyName("limit_price")]
     public decimal LimitPrice { get; set; }
-    
+
     /// <summary>
     ///   The price at which a trade is executed. This is needed for limit and stop limit orders.
     /// </summary>

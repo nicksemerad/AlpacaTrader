@@ -83,7 +83,7 @@ public class Response
             jObject.Value<double?>("bs") ?? 0.0 // bid size
         );
     }
-    
+
     /// <summary>
     ///   Parses the content response from a request for a single bar. (i.e. GetLatestBar, GetLatestBars)
     /// </summary>
@@ -102,7 +102,7 @@ public class Response
 
         return barsList;
     }
-    
+
     /// <summary>
     ///   Parses the json response for a single set of Quotes (only most recent bid and ask) for a list of symbols.
     ///   The response is turned into a QuotePair object which holds the symbol, Ask Quote, and Bid Quote.
@@ -123,7 +123,7 @@ public class Response
             return JObjectToQuotePair(symbol, jObject);
         }).ToList();
     }
-    
+
     /// <summary>
     ///   Parses the content response from a request for historical symbol bars. (i.e. GetHistoricalBar)
     /// </summary>

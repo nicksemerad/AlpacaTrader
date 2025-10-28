@@ -10,8 +10,8 @@ using Component;
 public abstract class StrategyBase
 {
     private IList<Bar> _bars;
-        
-        
+
+
     /// <summary>
     ///   When there is a new latest bar, use the past bars to determine the strategy's signal (i.e. buy, sell, wait)
     /// </summary>

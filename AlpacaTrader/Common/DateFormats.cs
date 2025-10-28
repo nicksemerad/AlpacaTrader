@@ -25,6 +25,6 @@ public static class DateFormats
     /// </summary>
     /// <param name="date">The date string in Alpaca API format: "yyyy-MM-ddTHH:mm:ssZ"(</param>
     /// <returns>The string's date time parsed into a C# DateTime object</returns>
-    public static DateTime ToDateTime(string date) => 
+    public static DateTime ToDateTime(string date) =>
         DateTime.ParseExact(date, ApiDateTimeFormat, System.Globalization.CultureInfo.InvariantCulture);
 }

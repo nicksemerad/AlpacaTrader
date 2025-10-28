@@ -53,7 +53,7 @@ public class BarOperations
     /// <summary>
     ///   Retrieves bars for a symbol within a time range from the database.
     /// </summary>
-    public async Task<List<Bar>> GetBarsBySymbolTimeframeAsync(string symbol, string timeframe, 
+    public async Task<List<Bar>> GetBarsBySymbolTimeframeAsync(string symbol, string timeframe,
         DateTime startTime, DateTime endTime)
     {
         // get a connection and make a new command using the GetBarsBySymbol query with parameter values
