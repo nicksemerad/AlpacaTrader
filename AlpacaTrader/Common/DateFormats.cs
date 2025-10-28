@@ -15,5 +15,5 @@ public static class DateFormats
     /// </summary>
     /// <param name="dateTime">The DateTime object to format</param>
     /// <returns>The DateTime formatted to work in API URLs</returns>
-    public static string Url(DateTime dateTime) => dateTime.ToString(LongDateTimeFormat);
+    public static string ToUrlString(DateTime dateTime) => dateTime.ToString(LongDateTimeFormat);
 }

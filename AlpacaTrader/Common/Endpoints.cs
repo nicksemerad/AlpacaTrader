@@ -54,8 +54,8 @@ public static class Endpoints
         List<string> urlParams =
         [
             ..additionalParams ?? [],
-            $"start={DateFormats.Url(startTime)}",
-            $"end={DateFormats.Url(endTime)}",
+            $"start={DateFormats.ToUrlString(startTime)}",
+            $"end={DateFormats.ToUrlString(endTime)}",
             "limit=10000"
         ];
 
