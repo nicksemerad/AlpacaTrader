@@ -7,25 +7,16 @@ namespace Database;
 /// <summary>
 ///   This class holds database operations for Bars i.e. saving and retrieving
 /// </summary>
-public class BarOperations
+public static class DbOperations
 {
-    private readonly TradingDbConnection _tradingDbConnection;
-
-    /// <summary>
-    ///   Makes a new BarOperations class to handle database operations with Bars
-    /// </summary>
-    public BarOperations()
-    {
-        _tradingDbConnection = new TradingDbConnection();
-    }
-
     /// <summary>
     ///   Inserts a bar into the database.
     /// </summary>
-    public async Task InsertBarAsync(Bar bar)
+    public static async Task InsertBarAsync(Bar bar)
     {
+        var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command using the InsertBar sql command
-        await using var connection = await _tradingDbConnection.GetConnectionAsync();
+        await using var connection = await tradingDbConnection.GetConnectionAsync();
         await using var cmd = new NpgsqlCommand(SqlCommands.InsertBar, connection);
         
         // add the InsertBar parameters to the command, which takes in all the bar properties
@@ -46,7 +37,7 @@ public class BarOperations
     /// <summary>
     ///   Inserts all bars in a list into the database.
     /// </summary>
-    public async Task InsertBarsAsync(List<Bar> bars)
+    public static async Task InsertBarsAsync(List<Bar> bars)
     {
         foreach (var bar in bars)
             await InsertBarAsync(bar);
@@ -55,11 +46,12 @@ public class BarOperations
     /// <summary>
     ///   Retrieves bars for a symbol within a time range from the database.
     /// </summary>
-    public async Task<List<Bar>> GetBarsBySymbolTimeframeAsync(string symbol, string timeframe,
+    public static async Task<List<Bar>> GetBarsBySymbolTimeframeAsync(string symbol, string timeframe,
         DateTime startTime, DateTime endTime)
     {
+        var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command with the GetBarsBySymbolTimeframeDate sql query
-        await using var connection = await _tradingDbConnection.GetConnectionAsync();
+        await using var connection = await tradingDbConnection.GetConnectionAsync();
         await using var cmd = new NpgsqlCommand(SqlCommands.GetBarsBySymbolTimeframeDate, connection);
         
         // add the GetBarsBySymbolTimeframeDate parameters to the command
