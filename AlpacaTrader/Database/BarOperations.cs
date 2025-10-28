@@ -28,7 +28,8 @@ public class BarOperations
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
         await using var cmd = new NpgsqlCommand(SqlQueries.InsertBar, connection);
         cmd.Parameters.AddWithValue("symbol", bar.Symbol);
-        cmd.Parameters.AddWithValue("timestamp", bar.Date);
+        cmd.Parameters.AddWithValue("timeframe", bar.Timeframe);
+        cmd.Parameters.AddWithValue("date", bar.Date);
         cmd.Parameters.AddWithValue("open", bar.Open);
         cmd.Parameters.AddWithValue("high", bar.High);
         cmd.Parameters.AddWithValue("low", bar.Low);
@@ -52,12 +53,14 @@ public class BarOperations
     /// <summary>
     ///   Retrieves bars for a symbol within a time range from the database.
     /// </summary>
-    public async Task<List<Bar>> GetBarsBySymbolAsync(string symbol, DateTime startTime, DateTime endTime)
+    public async Task<List<Bar>> GetBarsBySymbolTimeframeAsync(string symbol, string timeframe, 
+        DateTime startTime, DateTime endTime)
     {
         // get a connection and make a new command using the GetBarsBySymbol query with parameter values
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
-        await using var cmd = new NpgsqlCommand(SqlQueries.GetBarsBySymbol, connection);
+        await using var cmd = new NpgsqlCommand(SqlQueries.GetBarsBySymbolTimeframeDate, connection);
         cmd.Parameters.AddWithValue("symbol", symbol);
+        cmd.Parameters.AddWithValue("timeframe", timeframe);
         cmd.Parameters.AddWithValue("startTime", startTime);
         cmd.Parameters.AddWithValue("endTime", endTime);
 
@@ -71,14 +74,15 @@ public class BarOperations
             bars.Add(new Bar
             {
                 Symbol = reader.GetString(0),
-                Date = reader.GetDateTime(1),
-                Open = reader.GetDecimal(2),
-                High = reader.GetDecimal(3),
-                Low = reader.GetDecimal(4),
-                Close = reader.GetDecimal(5),
-                Volume = reader.GetInt32(6),
-                TradeCount = reader.GetInt32(7),
-                VolumeWeightedAverage = reader.GetDecimal(8)
+                Timeframe = reader.GetString(1),
+                Date = reader.GetDateTime(2),
+                Open = reader.GetDecimal(3),
+                High = reader.GetDecimal(4),
+                Low = reader.GetDecimal(5),
+                Close = reader.GetDecimal(6),
+                Volume = reader.GetDecimal(7),
+                TradeCount = reader.GetDecimal(8),
+                VolumeWeightedAverage = reader.GetDecimal(9)
             });
         }
 

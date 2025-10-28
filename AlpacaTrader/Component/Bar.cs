@@ -2,17 +2,25 @@
 using Common;
 
 using Newtonsoft.Json;
+using Skender.Stock.Indicators;
 
 /// <summary>
-///   This class represents a single Bar in a stock's candlestick chart.
+///   This class represents a single Bar in a stock's bar/ candlestick chart. It implements IQuote so it can be used
+///   with Skender Stock Indicators functions.
 /// </summary>
-public class Bar : Skender.Stock.Indicators.IQuote
+public class Bar : IQuote
 {
     /// <summary>
     ///   This Bar's stock ticker symbol.
     /// </summary>
     [JsonIgnore]
     public string Symbol { get; set; }
+    
+    /// <summary>
+    ///   This Bar's timeframe, the time between one bar and the next.
+    /// </summary>
+    [JsonIgnore]
+    public string Timeframe { get; set; }
     
     /// <summary>
     ///   The time this Bar's period started. For a 1-hour bar it's the start of the hour.
@@ -68,7 +76,7 @@ public class Bar : Skender.Stock.Indicators.IQuote
     /// <returns>The string representation of this Bar</returns>
     public override string ToString()
     {
-        return $"{Symbol} [{DateFormats.ToUrlString(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
+        return $"{Symbol} {Timeframe} [{DateFormats.ToUrlString(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
                $"O: ${Open:N2} - C: ${Close:N2}\n" + $"H: ${High:N2} - L: ${Low:N2}\n";
     }
 }
