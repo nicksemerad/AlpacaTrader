@@ -26,7 +26,7 @@ public class BarOperations
     {
         // get a connection and make a new command using the InsertBar query with parameter values
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
-        await using var cmd = new NpgsqlCommand(SqlQueries.InsertBar, connection);
+        await using var cmd = new NpgsqlCommand(SqlCommands.InsertBar, connection);
         cmd.Parameters.AddWithValue("symbol", bar.Symbol);
         cmd.Parameters.AddWithValue("timeframe", bar.Timeframe);
         cmd.Parameters.AddWithValue("date", bar.Date);
@@ -58,7 +58,7 @@ public class BarOperations
     {
         // get a connection and make a new command using the GetBarsBySymbol query with parameter values
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
-        await using var cmd = new NpgsqlCommand(SqlQueries.GetBarsBySymbolTimeframeDate, connection);
+        await using var cmd = new NpgsqlCommand(SqlCommands.GetBarsBySymbolTimeframeDate, connection);
         cmd.Parameters.AddWithValue("symbol", symbol);
         cmd.Parameters.AddWithValue("timeframe", timeframe);
         cmd.Parameters.AddWithValue("startTime", startTime);

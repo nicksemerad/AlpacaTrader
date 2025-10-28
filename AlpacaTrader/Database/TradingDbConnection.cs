@@ -68,7 +68,7 @@ public class TradingDbConnection
     {
         await using var connection = await GetConnectionAsync();
         
-        await using var cmd = new NpgsqlCommand(SqlQueries.CreateBarsTable, connection);
+        await using var cmd = new NpgsqlCommand(SqlCommands.CreateBarsTable, connection);
         await cmd.ExecuteNonQueryAsync();
         
         Console.WriteLine("Database tables initialized successfully.");

@@ -1,6 +1,6 @@
 namespace Common;
 
-public class SqlQueries
+public class SqlCommands
 {
     public const string InsertBar = """
         INSERT INTO bars (symbol, timeframe, date, open, high, low, close, volume, trade_count, vwap)
