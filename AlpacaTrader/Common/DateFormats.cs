@@ -11,7 +11,7 @@ public static class DateFormats
     /// <summary>
     ///   The format used by Alpaca API URLs and endpoint responses.
     /// </summary>
-    public const string ApiDateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ";
+    private const string ApiDateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ";
 
     /// <summary>
     ///   Takes in a DataTime object and returns it as a string formatted to work with Alpaca API URLs.

@@ -25,7 +25,7 @@ public class Request
     /// <param name="url"></param>
     public Request(string url)
     {
-        RestClientOptions opts = new RestClientOptions(url);
+        var opts = new RestClientOptions(url);
         _client = new RestClient(opts);
         _request = new RestRequest();
         AddHeaders(_request);
@@ -46,8 +46,8 @@ public class Request
             .Build();
 
         // get the api key and secret key from the configuration
-        string? apiKey = configuration["API"];
-        string? secretKey = configuration["SECRET"];
+        var apiKey = configuration["API"];
+        var secretKey = configuration["SECRET"];
 
         // make sure the keys aren't null
         if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey))
@@ -68,7 +68,7 @@ public class Request
     public async Task<string> GetAsync()
     {
         // log the request to the console
-        RestResponse response = await _client.GetAsync(_request);
+        var response = await _client.GetAsync(_request);
         Console.WriteLine($"REQUEST: {_client.Options.BaseUrl?.ToString()} STATUS: {response.StatusCode}");
         return response.Content ?? string.Empty;
     }
