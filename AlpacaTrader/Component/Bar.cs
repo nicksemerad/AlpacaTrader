@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 /// <summary>
 ///   This class represents a single Bar in a stock's candlestick chart.
 /// </summary>
-public class Bar
+public class Bar : Skender.Stock.Indicators.IQuote
 {
     /// <summary>
     ///   This Bar's stock ticker symbol.
@@ -18,7 +18,7 @@ public class Bar
     ///   The time this Bar's period started. For a 1-hour bar it's the start of the hour.
     /// </summary>
     [JsonProperty("t")]
-    public DateTime Timestamp { get; set; }
+    public DateTime Date { get; set; }
         
     /// <summary>
     ///   The first price the stock traded at in the time period.
@@ -48,13 +48,13 @@ public class Bar
     ///   The total number of shares traded in the time period.
     /// </summary>
     [JsonProperty("v")]
-    public int Volume { get; set; }
+    public decimal Volume { get; set; }
         
     /// <summary>
     ///   The total number of trades made in the time period.
     /// </summary>
     [JsonProperty("n")]
-    public int TradeCount { get; set; }
+    public decimal TradeCount { get; set; }
         
     /// <summary>
     ///   The average price of each share traded in the time period. 
@@ -68,7 +68,7 @@ public class Bar
     /// <returns>The string representation of this Bar</returns>
     public override string ToString()
     {
-        return $"{Symbol} [{DateFormats.Url(Timestamp)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
+        return $"{Symbol} [{DateFormats.Url(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
                $"O: ${Open:N2} - C: ${Close:N2}\n" + $"H: ${High:N2} - L: ${Low:N2}\n";
     }
 }

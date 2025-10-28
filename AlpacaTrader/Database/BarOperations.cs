@@ -28,7 +28,7 @@ public class BarOperations
         await using var connection = await _tradingDbConnection.GetConnectionAsync();
         await using var cmd = new NpgsqlCommand(SqlQueries.InsertBar, connection);
         cmd.Parameters.AddWithValue("symbol", bar.Symbol);
-        cmd.Parameters.AddWithValue("timestamp", bar.Timestamp);
+        cmd.Parameters.AddWithValue("timestamp", bar.Date);
         cmd.Parameters.AddWithValue("open", bar.Open);
         cmd.Parameters.AddWithValue("high", bar.High);
         cmd.Parameters.AddWithValue("low", bar.Low);
@@ -71,7 +71,7 @@ public class BarOperations
             bars.Add(new Bar
             {
                 Symbol = reader.GetString(0),
-                Timestamp = reader.GetDateTime(1),
+                Date = reader.GetDateTime(1),
                 Open = reader.GetDecimal(2),
                 High = reader.GetDecimal(3),
                 Low = reader.GetDecimal(4),
