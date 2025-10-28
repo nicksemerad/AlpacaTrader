@@ -16,7 +16,7 @@ public class Quote
     /// <summary>
     ///   The side of the quote i.e. ask or bid.
     /// </summary>
-    public QuoteSide Side { get; set; } // ask or bid
+    public QuoteSide Side { get; set; }
 
     /// <summary> 
     ///   An exchange code representing which exchange the quote came from. Some common codes are:
@@ -64,8 +64,7 @@ public class Quote
     /// <returns>A string holding the quote side, exchange code, price, and size</returns>
     public override string ToString()
     {
-        return $"{Side.ToDescription().ToUpper()}: " +
-               $"{Size} shares for ${Price} ea. via {Exchange}";
+        return $"{Side.ToDescription().ToUpper()}: " + $"{Size} shares for ${Price} ea. via {Exchange}";
     }
 }
 
@@ -123,6 +122,6 @@ public class QuotePair
     /// <returns>A string holding the symbol, ask quote, and bid quote</returns>
     public override string ToString()
     {
-        return $"Quotes for {Symbol}: \n\t {Ask?.ToString() ?? "None"} \n\t {Bid?.ToString() ?? "None"}";
+        return $"Quotes for {Symbol}: \n\t {Ask?.ToString() ?? "No ask"} \n\t {Bid?.ToString() ?? "No bid"}";
     }
 }

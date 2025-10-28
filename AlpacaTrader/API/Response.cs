@@ -85,7 +85,7 @@ public class Response
     }
 
     /// <summary>
-    ///   Parses the content response from a request for a single bar. (i.e. GetLatestBar, GetLatestBars)
+    ///   Parses the content response from a request for a single bar. (i.e. GetLatestBar, GetLatestBarsAsync)
     /// </summary>
     /// <returns>A list of the Bars parsed from the response.</returns>
     public List<Bar> ParseBars()
@@ -93,14 +93,12 @@ public class Response
         // try to get the bars from content as a string (symbol) and Bar dict, return an empty list if it fails
         if (!TryGetRootObject<Dictionary<string, Bar>>("bars", out var bars)) return [];
 
-        // make a list of the bars after adding the stock symbol (key) to each bar (value)
-        List<Bar> barsList = bars!.Select(bar =>
+        // make and return a list of the bars after adding the stock symbol (key) to each bar (value)
+        return bars!.Select(bar =>
         {
             bar.Value.Symbol = bar.Key;
             return bar.Value;
         }).ToList();
-
-        return barsList;
     }
 
     /// <summary>
@@ -112,20 +110,13 @@ public class Response
     {
         // try to get the quotes object from content as a JObject, return an empty list if it fails
         if (!TryGetRootObject<JObject>("quotes", out var quotes)) return [];
-
-        // return a list holding all the QuotePairs resulting from the parsed properties
-        return quotes!.Properties().Select(quote =>
-        {
-            // use the name (symbol) and value (quote data) to create a new QuotePair
-            string symbol = quote.Name;
-            JObject jObject = (JObject)quote.Value;
-
-            return JObjectToQuotePair(symbol, jObject);
-        }).ToList();
+        
+        // each property has the stock symbol as the name and quote data as the value, parse them to a list
+        return quotes!.Properties().Select(prop => JObjectToQuotePair(prop.Name, (JObject)prop.Value)).ToList();
     }
 
     /// <summary>
-    ///   Parses the content response from a request for historical symbol bars. (i.e. GetHistoricalBar)
+    ///   Parses the content response from a request for historical symbol bars. (i.e. GetHistoricalBarsAsync)
     /// </summary>
     /// <param name="token">The token reference that points to the next page of Bars</param>
     /// <returns>A list of the bars parsed from the response content</returns>
@@ -137,23 +128,12 @@ public class Response
         // if the next_page_token is present in the json, update token, else set token as an empty string
         token = GetNextPageToken();
 
-        // create a list to hold all the bars, then iterate through each symbol's bars
-        List<Bar> barsList = new List<Bar>();
-        foreach (var (symbol, bars) in symbolBars!)
-        {
-            // add the symbol to each bar and add all the bars to barsList
-            barsList.AddRange(bars.Select(bar =>
-            {
-                bar.Symbol = symbol;
-                return bar;
-            }));
-        }
-
-        return barsList;
+        // aggregate all the bars from each symbolBars element, cast it to a list and return it
+        return symbolBars!.SelectMany(pair => pair.Value).ToList();
     }
 
     /// <summary>
-    ///   Parses the content response from a request for a symbol's historical quotes. (i.e. GetHistoricalQuotes)
+    ///   Parses the content response from a request for a symbol's historical quotes. (i.e. GetHistoricalQuotesAsync)
     /// </summary>
     /// <param name="token">The token reference that points to the next page of Quotes</param>
     /// <returns>A list of the QuotePairs(Ask and Bid Quotes) parsed from the response content</returns>
@@ -166,11 +146,7 @@ public class Response
         // if the next_page_token is present in the json, update token, else set token as an empty string
         token = GetNextPageToken();
 
-        return quotes!.Select(quote =>
-        {
-            // use the symbol and each array element with quote data to create a new QuotePair
-            JObject jObject = (JObject)quote;
-            return JObjectToQuotePair(symbol!, jObject);
-        }).ToList();
+        // use the symbol and each JArray quote data element to create and return a List of QuotePairs
+        return quotes!.Select(quote => JObjectToQuotePair(symbol!, (JObject)quote)).ToList();
     }
 }
