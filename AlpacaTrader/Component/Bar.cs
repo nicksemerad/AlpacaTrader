@@ -68,7 +68,7 @@ public class Bar : Skender.Stock.Indicators.IQuote
     /// <returns>The string representation of this Bar</returns>
     public override string ToString()
     {
-        return $"{Symbol} [{DateFormats.Url(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
+        return $"{Symbol} [{DateFormats.ToUrlString(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" + 
                $"O: ${Open:N2} - C: ${Close:N2}\n" + $"H: ${High:N2} - L: ${Low:N2}\n";
     }
 }
