@@ -185,7 +185,7 @@ public static class DbOperations
     ///   is returned instead.
     /// </summary>
     /// <returns>The number of bars in the bars table or -1 if the sql command fails</returns>
-    private static async Task<decimal> GetBarsCountAsync()
+    public static async Task<decimal> GetBarsCountAsync()
     {
         var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command with the GetBarsCount sql query
@@ -202,7 +202,7 @@ public static class DbOperations
     ///   returns null, -1m is returned instead.
     /// </summary>
     /// <returns>The number of CalendarDays in the trading_calendar table or -1 if the sql command fails</returns>
-    private static async Task<decimal> GetCalendarDaysCountAsync()
+    public static async Task<decimal> GetCalendarDaysCountAsync()
     {
         var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command with the GetCalendarDaysCount sql query
