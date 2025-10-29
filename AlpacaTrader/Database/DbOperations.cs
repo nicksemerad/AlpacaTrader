@@ -181,11 +181,11 @@ public static class DbOperations
     }
     
     /// <summary>
-    ///   Gets the total number of bars in the bars database table as a decimal. If the sql command returns null, -1m
+    ///   Gets the total number of bars in the bars database table as a long. If the sql command returns null, -1
     ///   is returned instead.
     /// </summary>
     /// <returns>The number of bars in the bars table or -1 if the sql command fails</returns>
-    public static async Task<decimal> GetBarsCountAsync()
+    public static async Task<long> GetBarsCountAsync()
     {
         var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command with the GetBarsCount sql query
@@ -194,15 +194,15 @@ public static class DbOperations
         
         // execute the command and return the first and only row, if the row is null return -1
         var result = await cmd.ExecuteScalarAsync();
-        return result != null ? Convert.ToDecimal(result) : -1m;
+        return result != null ? Convert.ToInt64(result) : -1;
     }
     
     /// <summary>
-    ///   Gets the total number of CalendarDays in the trading_calendar database table as a decimal. If the sql command
-    ///   returns null, -1m is returned instead.
+    ///   Gets the total number of CalendarDays in the trading_calendar database table as a long. If the sql command
+    ///   returns null, -1 is returned instead.
     /// </summary>
     /// <returns>The number of CalendarDays in the trading_calendar table or -1 if the sql command fails</returns>
-    public static async Task<decimal> GetCalendarDaysCountAsync()
+    public static async Task<long> GetCalendarDaysCountAsync()
     {
         var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command with the GetCalendarDaysCount sql query
@@ -211,6 +211,6 @@ public static class DbOperations
         
         // execute the command and return the first and only row, if the row is null return -1
         var result = await cmd.ExecuteScalarAsync();
-        return result != null ? Convert.ToDecimal(result) : -1m;
+        return result != null ? Convert.ToInt64(result) : -1;
     }
 }
