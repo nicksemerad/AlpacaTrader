@@ -45,15 +45,15 @@ public class Request
             .Build();
 
         // get the API key and secret key from the configuration
-        var APIKey = configuration["API"];
+        var apiKey = configuration["API"];
         var secretKey = configuration["SECRET"];
 
         // make sure the keys aren't null
-        if (string.IsNullOrEmpty(APIKey) || string.IsNullOrEmpty(secretKey))
+        if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey))
             throw new ArgumentException("Alpaca API key or private key not found.");
 
         // add the headers
-        _request.AddHeader("APCA-API-KEY-ID", APIKey);
+        _request.AddHeader("APCA-API-KEY-ID", apiKey);
         _request.AddHeader("APCA-API-SECRET-KEY", secretKey);
         _request.AddHeader("accept", "application/json");
     }

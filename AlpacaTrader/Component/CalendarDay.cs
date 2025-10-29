@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 ///   make explaining the class properties and methods easier, I will refer to an instance of this class as "today"
 ///   i.e. the Date property is "today's date".
 /// </summary>
-public class TradingDay
+public class CalendarDay
 {
     /// <summary>
     ///   Today's date.

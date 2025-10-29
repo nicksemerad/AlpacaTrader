@@ -78,7 +78,7 @@ public sealed class ApiTests
     }
     
     /// <summary>
-    ///   Test that GetTradingDaysAsync with the DateTime range from October 20th until October 27th successfully
+    ///   Test that GetCalendarDaysAsync with the DateTime range from October 20th until October 27th successfully
     ///   calls the API and retrieves the dates of the 6 trading days that happened during that period. From Monday the
     ///   20th until Friday the 24th, which makes 5 days. Then the weekend where the market stayed closed, and ending
     ///   on Monday the 27th making 6 TradingDays.
@@ -87,7 +87,7 @@ public sealed class ApiTests
     public async Task TestGetTradingDays()
     {
         DateTime start = Times[3], end = Times[0]; // Oct 20 until Oct 27
-        List<TradingDay> days = await Client.GetTradingDaysAsync(start, end);
+        List<CalendarDay> days = await Client.GetCalendarDaysAsync(start, end);
         
         Assert.IsTrue(days.Count > 0);
         Assert.AreEqual(6, days.Count); // 20, 21, 22, 23, 24, weekend, 27

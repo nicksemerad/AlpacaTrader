@@ -175,11 +175,11 @@ public class Response
     }
 
     /// <summary>
-    ///   Parses the content response from a request for the calendar of trading days into a List of TradingDays.
+    ///   Parses the content response from a request for the calendar of trading days into a List of CalendarDay.
     /// </summary>
-    /// <returns>A List full of TradingDay objects if parsing is successful, else an empty list</returns>
-    public List<TradingDay> ParseTradingDays()
+    /// <returns>A List full of CalendarDay objects if parsing is successful, else an empty list</returns>
+    public List<CalendarDay> ParseCalendarDays()
     {
-        return TryGetRootList<TradingDay>(out var tradingDays) ? tradingDays! : [];
+        return TryGetRootList<CalendarDay>(out var calendarDays) ? calendarDays! : [];
     }
 }
