@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>c3739a0f-4869-496e-8975-425885bafdb1</UserSecretsId>
+        <RootNamespace>Api</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

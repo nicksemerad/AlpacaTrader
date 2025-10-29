@@ -1,7 +1,7 @@
 using Component;
 using Newtonsoft.Json.Linq;
 
-namespace API;
+namespace Api;
 
 /// <summary>
 ///   Handle parsing the json content that is returned from a request into its corresponding C# objects. This is done

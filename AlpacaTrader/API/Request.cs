@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using RestSharp;
 
-namespace API;
+namespace Api;
 
 /// <summary>
 ///   This class handles making requests to the alpaca API endpoints
@@ -19,7 +19,7 @@ public class Request
     private readonly RestRequest _request;
 
     /// <summary>
-    ///   Builds a new Request for the url. Headers for the alpaca secret key and api key are added, as well as a
+    ///   Builds a new Request for the url. Headers for the alpaca secret key and API key are added, as well as a
     ///   header stating to accept json responses.
     /// </summary>
     /// <param name="url"></param>
@@ -44,16 +44,16 @@ public class Request
             .AddUserSecrets<Request>()
             .Build();
 
-        // get the api key and secret key from the configuration
-        var apiKey = configuration["API"];
+        // get the API key and secret key from the configuration
+        var APIKey = configuration["API"];
         var secretKey = configuration["SECRET"];
 
         // make sure the keys aren't null
-        if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey))
-            throw new ArgumentException("Alpaca api key or private key not found.");
+        if (string.IsNullOrEmpty(APIKey) || string.IsNullOrEmpty(secretKey))
+            throw new ArgumentException("Alpaca API key or private key not found.");
 
         // add the headers
-        _request.AddHeader("APCA-API-KEY-ID", apiKey);
+        _request.AddHeader("APCA-API-KEY-ID", APIKey);
         _request.AddHeader("APCA-API-SECRET-KEY", secretKey);
         _request.AddHeader("accept", "application/json");
     }

@@ -6,12 +6,12 @@
 public static class Endpoints
 {
     /// <summary>
-    ///   The base url for all api endpoints needed when making paper trades.
+    ///   The base url for all API endpoints needed when making paper trades.
     /// </summary>
     private const string Trade = "https://paper-api.alpaca.markets/v2";
 
     /// <summary>
-    ///   The base url for all api endpoints needed to get stock data.
+    ///   The base url for all API endpoints needed to get stock data.
     /// </summary>
     private const string Data = "https://data.alpaca.markets/v2/stocks";
 
@@ -20,7 +20,7 @@ public static class Endpoints
     /// </summary>
     /// <param name="name">The name of the desired endpoint data i.e. bars, quotes, etc</param>
     /// <param name="symbols">The stock ticker symbol(s) to get the data for</param>
-    /// <returns>The full api endpoint url for the parameters</returns>
+    /// <returns>The full API endpoint url for the parameters</returns>
     private static string LatestUrl(string name, List<string> symbols)
     {
         return $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}";
@@ -64,15 +64,15 @@ public static class Endpoints
     }
 
     /// <summary>
-    ///   Get the api endpoint url to get the account's trading information.
+    ///   Get the API endpoint url to get the account's trading information.
     /// </summary>
-    /// <returns>The api endpoint url for the account's trading information</returns>
+    /// <returns>The API endpoint url for the account's trading information</returns>
     public static string Account() => $"{Trade}/account";
 
     /// <summary>
-    ///   Get the api endpoint url to get the account's assets.
+    ///   Get the API endpoint url to get the account's assets.
     /// </summary>
-    /// <returns>The api endpoint url for the account assets</returns>
+    /// <returns>The API endpoint url for the account assets</returns>
     public static string Assets() => $"{Trade}/assets";
 
     /// <summary>
@@ -89,14 +89,14 @@ public static class Endpoints
     ///   Get the latest bar for the specified stock ticker symbol(s).
     /// </summary>
     /// <param name="symbols">The ticker symbol(s) to get the latest bar for</param>
-    /// <returns>The api endpoint url for the latest bar(s)</returns>
+    /// <returns>The API endpoint url for the latest bar(s)</returns>
     public static string LatestBars(List<string> symbols) => LatestUrl("bars", symbols);
 
     /// <summary>
     ///   Get the latest bid and ask quotes for the specified stock ticker symbol(s).
     /// </summary>
     /// <param name="symbols">The ticker symbol(s) to get the latest quotes for</param>
-    /// <returns>The api endpoint url for the latest quotes</returns>
+    /// <returns>The API endpoint url for the latest quotes</returns>
     public static string LatestQuotes(List<string> symbols) => LatestUrl("quotes", symbols);
 
     /// <summary>
@@ -117,7 +117,7 @@ public static class Endpoints
     /// <param name="timeframe">The granularity of the historical bars i.e. one per hour, day, etc</param>
     /// <param name="startTime">DateTime the historical bars start at</param>
     /// <param name="endTime">DateTime the historical bars will end at</param>
-    /// <returns>The api endpoint url for the next page of historical bars for the symbol</returns>
+    /// <returns>The API endpoint url for the next page of historical bars for the symbol</returns>
     public static string HistoricalBars(string symbol, string timeframe, DateTime startTime, DateTime endTime)
     {
         // the bars endpoint url needs a symbol and timeframe so add them to a list in the url parameter format
@@ -134,7 +134,7 @@ public static class Endpoints
     /// <param name="symbol">The ticker symbol to get the historical quotes for</param>
     /// <param name="startTime">DateTime the historical quotes start at</param>
     /// <param name="endTime">DateTime the historical quotes will end at</param>
-    /// <returns>The api endpoint url for the next page of historical quotes for the symbol</returns>
+    /// <returns>The API endpoint url for the next page of historical quotes for the symbol</returns>
     public static string HistoricalQuotes(string symbol, DateTime startTime, DateTime endTime)
     {
         // the quotes endpoint has no additional params, so just return the string result from HistoricalUrl 

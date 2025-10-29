@@ -1,12 +1,19 @@
 using Common;
 using Component;
+using Database;
 
-namespace API;
+namespace Api;
 
 /// <summary>
-///   This class handles building API endpoint urls, sending requests, and parsing the response's data.
+///   This class orchestrates the processes that retrieve and store Alpaca API data. This is done by using many
+///   project classes in conjunction with each-other. The static Endpoint methods take the necessary parameters and
+///   uses them to build the API URLs. The URLs are then passed to the Request class which makes the http requests and
+///   retrieves the API's JSON text response. This JSON text is passed to the Response class, which handles parsing it
+///   into c# objects like Bars, Quotes, Orders, TradingDays, etc. depending on the endpoint and parameters. Once the
+///   data has been parsed and aggregated into the list objects, the DbOperations class methods can be used to write
+///   it to corresponding SQL database tables.
 /// </summary>
-public class Client
+public static class Client
 {
     /// <summary>
     ///   This delegate is similar to a ResponseParser but has an additional parameter, which is a string holding the
@@ -17,16 +24,16 @@ public class Client
     private delegate List<T> PaginatedResponseParser<T>(Response r, ref string token);
 
     /// <summary>
-    ///   This method takes in an endpoint url and returns a new response object with the json content returned from
-    ///   the endpoint request.
+    ///   This method takes in an endpoint url and returns a new response object storing the json content that was
+    ///   returned from requesting the endpoint.
     /// </summary>
     /// <param name="url">The url to request and return in a Response</param>
     /// <returns>A response object with the json content returned by the request</returns>
     private static async Task<Response> GetResponseAsync(string url)
     {
         var request = new Request(url);
-        string content = await request.GetAsync();
-        return new Response(content);
+        var contentString = await request.GetAsync();
+        return new Response(contentString);
     }
 
     /// <summary>
@@ -39,27 +46,26 @@ public class Client
     /// <returns>A list with all the collected elements from the endpoint</returns>
     private static async Task<List<T>> GetAllPaginatedItemsAsync<T>(string url, PaginatedResponseParser<T> parser)
     {
-        // parse the first page using the parser and set the result as a new list, parser will update the token
+        // parse the first page using the parser and set the result as the items list. parser also updates the token
         var token = string.Empty;
-        List<T> listOfTs = parser(await GetResponseAsync(url), ref token);
+        var pageItems = parser(await GetResponseAsync(url), ref token);
 
-        // as long as the previous response had a next page token, add the token to the base url and parse the
-        // response (which updates token) and add the parsed Ts to the list
+        // if the previous response has a next page token, add it to the base url, request it, and parse the response
+        // (which updates token). add the parsed items to the pageItems list and repeat until token is null or empty
         while (!string.IsNullOrEmpty(token))
         {
             var response = await GetResponseAsync(Endpoints.AddPaginationToken(url, token));
-            listOfTs.AddRange(parser(response, ref token));
+            pageItems.AddRange(parser(response, ref token));
         }
 
         // all the paginated data pages have been collected, return the final list
-        return listOfTs;
+        return pageItems;
     }
 
     /// <summary>
-    ///   Gets a list of the most recent Bars for the specified stock symbols The endpoint url is constructed,
-    ///   requested, and parsed into the returned List of Bars.
+    ///   Gets a list with the most recent Bar for each of the specified stock symbols.
     /// </summary>
-    /// <param name="symbols">The stock ticker symbols to get the data for</param>
+    /// <param name="symbols">The stock ticker symbols to get the latest bars for</param>
     /// <returns>A list of all the latest Bars returned from the endpoint</returns>
     public static async Task<List<Bar>> GetLatestBarsAsync(List<string> symbols)
     {
@@ -68,8 +74,8 @@ public class Client
     }
 
     /// <summary>
-    ///   Gets a list of the most recent QuotePairs (ask and bid) for the specified stock symbols. The endpoint url
-    ///   is constructed, requested, and parsed into the returned List of QuotePairs.
+    ///   Gets a list of the most recent QuotePairs for the specified stock symbols, which consists of an Ask Quote,
+    ///   a Bid Quote, or both.
     /// </summary>
     /// <param name="symbols">The symbols to get the quotes for</param>
     /// <returns>A list of all the latest QuotePairs returned from the endpoint</returns>
@@ -81,11 +87,16 @@ public class Client
 
     /// <summary>
     ///   Uses the Historical Bars API endpoint to get all the Bars for the symbol according to the other
-    ///   parameters. First is timeframe which describes the desired granularity of the historical bars. For example,
-    ///   if we want one bar for every [1-59] minutes in the range timeframe is "[1-59]T". For hours timeframe can be
-    ///   "[1-23]H". Following this pattern we can do 1 day, week, or common multiple of months with "1D", "1W", and
-    ///   "[1,2,3,4,6,12]M" respectively. The last two parameters are DateTime objects that mark the start and end
-    ///   dates of the requested historical bars.
+    ///   parameters. The first additional parameter is timeframe, which describes the desired time period between the
+    ///   historical bars. As with any historical data and endpoints, the final two parameters are the start and end
+    ///   date time for the range of desired data. The timeframe string can be any of the following:
+    ///   <list type="bullet">
+    ///     <item>Minutes: [1-59]T</item>
+    ///     <item>Hours: [1-23]H</item>
+    ///     <item>Days: 1D</item>
+    ///     <item>Weeks: 1W</item>
+    ///     <item>Months: [1, 2, 3, 4, 6, 12]M</item>
+    ///   </list>
     /// </summary>
     /// <param name="symbol">The ticker symbol to get the historical bars for</param>
     /// <param name="timeframe">The granularity of the historical bars i.e. one per hour, day, etc</param>
@@ -112,13 +123,13 @@ public class Client
     }
 
     /// <summary>
-    ///   Uses the Historical Quotes API endpoint to get all the Quotes for the symbol that were made during the time
-    ///   period defined by the parameters for start and end time.
+    ///   Uses the Historical Quotes API endpoint to get all the ask and bid Quotes made for the symbol during the
+    ///   time range defined by the start and end time parameters.
     /// </summary>
     /// <param name="symbol">The ticker symbol to get the historical quotes for</param>
-    /// <param name="startTime">DateTime the historical quotes should start at</param>
-    /// <param name="endTime">DateTime the historical quotes should end at</param>
-    /// <returns>A list holding all the scraped historical quote pairs for the symbol</returns>
+    /// <param name="startTime">The DateTime that the historical quotes start at</param>
+    /// <param name="endTime">The DateTime that the historical quotes end at</param>
+    /// <returns>A list holding all the parsed historical quote pairs for the symbol</returns>
     public static async Task<List<QuotePair>> GetHistoricalQuotesAsync(string symbol, DateTime startTime,
         DateTime endTime)
     {
@@ -126,5 +137,25 @@ public class Client
             Endpoints.HistoricalQuotes(symbol, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalQuotes(ref token)
         );
+    }
+
+    /// <summary>
+    ///   Gets a list of TradingDay objects that are parsed from the calendar endpoint. The calendar endpoint holds
+    ///   all the active trading days and the times for open/close, pre-market open/ post-market close, etc. for the
+    ///   specified time range. This data will be used primarily during backtesting in order to simulate trading
+    ///   during actual trading hours. 
+    /// </summary>
+    /// <param name="startTime">DateTime the list of TradingDays starts at</param>
+    /// <param name="endTime">DateTime the list of TradingDays ends at</param>
+    /// <returns>A list of all the trading days and info that happened within the date range</returns>
+    public static async Task<List<TradingDay>> GetTradingDaysAsync(DateTime startTime, DateTime endTime)
+    {
+        var response = await GetResponseAsync(Endpoints.Calendar(startTime, endTime));
+        return response.ParseTradingDays();
+    }
+
+    public static async Task Main(string[] args)
+    {
+        
     }
 }

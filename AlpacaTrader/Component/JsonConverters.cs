@@ -23,8 +23,8 @@ public class CalendarApiTimeOnlyConverter : JsonConverter<TimeOnly>
 
     /// <summary>
     ///   ReadJson override that handles the custom logic for parsing the API TimeOnly fields that are missing the
-    ///   ':' character. If one is present, it is parsed normally. If one is missing and it's 4 chars long, add the ':'
-    ///   char in the middle of the string and then parse it. If somehow neither of those are true throw a
+    ///   ':' character. If one is present, it is parsed normally. If one is missing, and it's 4 chars long, add the
+    ///   ':' char in the middle of the string and then parse it. If somehow neither of those are true throw a
     ///   JsonException.
     /// </summary>
     /// <param name="reader">The JsonReader that is reading the json string value</param>

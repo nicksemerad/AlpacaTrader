@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{906611D8-7688-4293-ADA7-A30D04C89FEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{906611D8-7688-4293-ADA7-A30D04C89FEF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Component", "Component\Component.csproj", "{4B9A0AFC-9183-42B0-B0E4-B48A8453D35C}"
 EndProject
@@ -13,6 +13,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{5E9C1289-D70E-4BDD-9D18-D98F2DCC21E4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indicators", "Indicators\Indicators.csproj", "{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiTests", "ApiTests\ApiTests.csproj", "{40B7D518-8555-4D6C-AA9B-38E74E04E43A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,5 +50,9 @@ Global
 		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A77759F-64EB-4F9A-8FF9-9DAAEDD8355B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40B7D518-8555-4D6C-AA9B-38E74E04E43A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40B7D518-8555-4D6C-AA9B-38E74E04E43A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40B7D518-8555-4D6C-AA9B-38E74E04E43A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40B7D518-8555-4D6C-AA9B-38E74E04E43A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
