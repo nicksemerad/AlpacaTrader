@@ -76,7 +76,7 @@ public class Bar : IQuote
     /// <returns>The string representation of this Bar</returns>
     public override string ToString()
     {
-        return $"{Symbol} {Timeframe} [{DateFormats.ToUrlString(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" +
+        return $"{Symbol} {Timeframe} [{DateTimeUtils.ToUrlString(Date)}] - VWA: ${VolumeWeightedAverage:N2}\n" +
                $"O: ${Open:N2} - C: ${Close:N2}\n" + $"H: ${High:N2} - L: ${Low:N2}\n";
     }
 }
