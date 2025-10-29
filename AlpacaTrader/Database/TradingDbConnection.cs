@@ -77,6 +77,6 @@ public class TradingDbConnection
         await calendarCmd.ExecuteNonQueryAsync();
         Console.WriteLine("Database 'trading_calendar' table successfully initialized.");
         
-        Console.WriteLine("Database tables successfully initialized.");
+        Console.WriteLine("-------------------------------------------------------------");
     }
 }

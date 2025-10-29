@@ -97,10 +97,10 @@ public static class DbOperations
 
         // add the InsertCalendarDay parameters to the command, which takes in all the CalendarDay properties
         cmd.Parameters.AddWithValue("date", day.Date.ToDateTime(TimeOnly.MinValue));
-        cmd.Parameters.AddWithValue("openTime", day.OpenTime.ToTimeSpan());
-        cmd.Parameters.AddWithValue("closeTime", day.CloseTime.ToTimeSpan());
-        cmd.Parameters.AddWithValue("sessionOpenTime", day.SessionOpenTime.ToTimeSpan());
-        cmd.Parameters.AddWithValue("sessionCloseTime", day.SessionCloseTime.ToTimeSpan());
+        cmd.Parameters.AddWithValue("open_time", day.OpenTime.ToTimeSpan());
+        cmd.Parameters.AddWithValue("close_time", day.CloseTime.ToTimeSpan());
+        cmd.Parameters.AddWithValue("session_open_time", day.SessionOpenTime.ToTimeSpan());
+        cmd.Parameters.AddWithValue("session_close_time", day.SessionCloseTime.ToTimeSpan());
 
         await cmd.ExecuteNonQueryAsync();
     }
