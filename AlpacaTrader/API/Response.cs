@@ -25,7 +25,31 @@ public class Response
     }
 
     /// <summary>
-    ///   Try and get the root object at the parameter key from _content, and cast it to be of type T. If the object
+    ///   Try and get the root list of elements from _content and cast it to a List of type T. If this process is
+    ///   successful, the out rootList parameter is set to the List of Ts and true is returned. If something went
+    ///   wrong, rootList is set to null and false is returned.
+    /// </summary>
+    /// <param name="rootList">The List to set as the List of T parsed from the response json</param>
+    /// <typeparam name="T">The type of elements in the root array that need to be parsed</typeparam>
+    /// <returns>True if the parsing is successful, false if not</returns>
+    private bool TryGetRootList<T>(out List<T>? rootList)
+    {
+        try
+        {
+            // convert the response content to a JArray, cast it to a List of T and return true
+            var jArray = JArray.Parse(_content);
+            rootList = jArray.ToObject<List<T>>();
+            return true;
+        }
+        catch
+        {
+            rootList = null;
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///   Try and get the root object at the parameter key from _content and cast it to be of type T. If the object
     ///   is successfully retrieved and cast, return true. If anything fails, return false. The rootObject parameter
     ///   is set to the result of the cast if it is successful, or null if it fails.
     /// </summary>
@@ -38,9 +62,9 @@ public class Response
     {
         try
         {
-            // convert the response content to json, then try to find and cast the object at "key" to a T
-            var json = JObject.Parse(_content);
-            rootObject = json[key]!.ToObject<T>();
+            // convert the response content to a JObject, then try to find and cast the object at "key" to a T
+            var jObject = JObject.Parse(_content);
+            rootObject = jObject[key]!.ToObject<T>();
             // return false if the rootObject is null and not nullable, else true
             return !(rootObject is null && !isNullable);
         }
@@ -133,7 +157,7 @@ public class Response
     }
 
     /// <summary>
-    ///   Parses the content response from a request for a symbol's historical quotes. (i.e. GetHistoricalQuotesAsync)
+    ///   Parses the content response from a request for a symbol's historical quotes.
     /// </summary>
     /// <param name="token">The token reference that points to the next page of Quotes</param>
     /// <returns>A list of the QuotePairs(Ask and Bid Quotes) parsed from the response content</returns>
@@ -148,5 +172,14 @@ public class Response
 
         // use the symbol and each JArray quote data element to create and return a List of QuotePairs
         return quotes!.Select(quote => JObjectToQuotePair(symbol!, (JObject)quote)).ToList();
+    }
+
+    /// <summary>
+    ///   Parses the content response from a request for the calendar of trading days into a List of TradingDays.
+    /// </summary>
+    /// <returns>A List full of TradingDay objects if parsing is successful, else an empty list</returns>
+    public List<TradingDay> ParseTradingDays()
+    {
+        return TryGetRootList<TradingDay>(out var tradingDays) ? tradingDays! : [];
     }
 }

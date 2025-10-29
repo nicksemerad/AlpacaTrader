@@ -8,7 +8,7 @@ public static class Endpoints
     /// <summary>
     ///   The base url for all api endpoints needed when making paper trades.
     /// </summary>
-    private const string Trade = "https://paper-api.alpaca.markets";
+    private const string Trade = "https://paper-api.alpaca.markets/v2";
 
     /// <summary>
     ///   The base url for all api endpoints needed to get stock data.
@@ -38,13 +38,13 @@ public static class Endpoints
     }
 
     /// <summary>
-    ///   Creates the url for a historical type endpoint. The returned url is composed of a base url, start and end
-    ///   DateTimes which all historical endpoints need, a limit of the maximum items per page response, the next page
-    ///   token (if there is one), and any additional parameters that an endpoint may need.
+    ///   Adds all the parameters needed for endpoints that specify a date range. The returned url is composed of a
+    ///   base url, start and end DateTimes, a limit of the maximum items per page response, and any additional
+    ///   parameters that an endpoint may need.
     /// </summary>
     /// <param name="baseUrl">The base url with the specific data endpoint name</param>
-    /// <param name="startTime">DateTime the historical quotes start at</param>
-    /// <param name="endTime">DateTime the historical quotes will end at</param>
+    /// <param name="startTime">DateTime the endpoint data start at</param>
+    /// <param name="endTime">DateTime the endpoint data will end at</param>
     /// <param name="additionalParams">A list of additional parameters that the endpoint url requires</param>
     /// <returns>The constructed url for the specific endpoint with all the necessary parameters</returns>
     private static string HistoricalUrl(string baseUrl, DateTime startTime, DateTime endTime,
@@ -54,8 +54,8 @@ public static class Endpoints
         List<string> urlParams =
         [
             ..additionalParams ?? [],
-            $"start={DateFormats.ToUrlString(startTime)}",
-            $"end={DateFormats.ToUrlString(endTime)}",
+            $"start={DateTimeUtils.ToUrlString(startTime)}",
+            $"end={DateTimeUtils.ToUrlString(endTime)}",
             "limit=10000"
         ];
 
@@ -67,13 +67,23 @@ public static class Endpoints
     ///   Get the api endpoint url to get the account's trading information.
     /// </summary>
     /// <returns>The api endpoint url for the account's trading information</returns>
-    public static string Account() => $"{Trade}/v2/account";
+    public static string Account() => $"{Trade}/account";
 
     /// <summary>
     ///   Get the api endpoint url to get the account's assets.
     /// </summary>
     /// <returns>The api endpoint url for the account assets</returns>
-    public static string Assets() => $"{Trade}/v2/assets";
+    public static string Assets() => $"{Trade}/assets";
+
+    /// <summary>
+    ///   Builds and returns the endpoint url for all the calendar days that the market opened for, in the specified
+    ///   date-time range. Each returned day has the EST time for market open, close, date for settlement date, etc. 
+    /// </summary>
+    /// <param name="startTime">The first day of the date-time range to get the trading days in</param>
+    /// <param name="endTime">The last day of the date-time range to get the trading days in</param>
+    /// <returns>The trading days calendar endpoint url for the specified time range</returns>
+    public static string Calendar(DateTime startTime, DateTime endTime) 
+        => HistoricalUrl($"{Trade}/calendar", startTime, endTime);
 
     /// <summary>
     ///   Get the latest bar for the specified stock ticker symbol(s).
