@@ -179,4 +179,38 @@ public static class DbOperations
 
         return days;
     }
+    
+    /// <summary>
+    ///   Gets the total number of bars in the bars database table as a decimal. If the sql command returns null, -1m
+    ///   is returned instead.
+    /// </summary>
+    /// <returns>The number of bars in the bars table or -1 if the sql command fails</returns>
+    private static async Task<decimal> GetBarsCountAsync()
+    {
+        var tradingDbConnection = new TradingDbConnection();
+        // get a connection and make a new command with the GetBarsCount sql query
+        await using var connection = await tradingDbConnection.GetConnectionAsync();
+        await using var cmd = new NpgsqlCommand(SqlCommands.GetBarsCount, connection);
+        
+        // execute the command and return the first and only row, if the row is null return -1
+        var result = await cmd.ExecuteScalarAsync();
+        return result != null ? Convert.ToDecimal(result) : -1m;
+    }
+    
+    /// <summary>
+    ///   Gets the total number of CalendarDays in the trading_calendar database table as a decimal. If the sql command
+    ///   returns null, -1m is returned instead.
+    /// </summary>
+    /// <returns>The number of CalendarDays in the trading_calendar table or -1 if the sql command fails</returns>
+    private static async Task<decimal> GetCalendarDaysCountAsync()
+    {
+        var tradingDbConnection = new TradingDbConnection();
+        // get a connection and make a new command with the GetCalendarDaysCount sql query
+        await using var connection = await tradingDbConnection.GetConnectionAsync();
+        await using var cmd = new NpgsqlCommand(SqlCommands.GetCalendarDaysCount, connection);
+        
+        // execute the command and return the first and only row, if the row is null return -1
+        var result = await cmd.ExecuteScalarAsync();
+        return result != null ? Convert.ToDecimal(result) : -1m;
+    }
 }

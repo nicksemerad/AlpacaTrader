@@ -36,7 +36,7 @@ public class TradingDbConnection
     /// <returns>The NpgsqlConnection to the database</returns>
     public async Task<NpgsqlConnection> GetConnectionAsync()
     {
-        NpgsqlConnection connection = new NpgsqlConnection(_connectionString);
+        var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
         return connection;
     }
@@ -49,7 +49,7 @@ public class TradingDbConnection
     {
         try
         {
-            await using NpgsqlConnection connection = await GetConnectionAsync();
+            await using var connection = await GetConnectionAsync();
             Console.WriteLine("Database connection succeeded");
             return true;
         }
@@ -61,16 +61,22 @@ public class TradingDbConnection
     }
     
     /// <summary>
-    ///   Initializes the database tables, creates them if they don't already exist. Should be called once when the
-    ///   TradingDbConnection is first connected.
+    ///   Initializes the database tables by creating them if they don't already exist.
     /// </summary>
     public async Task InitializeDatabaseAsync()
     {
         await using var connection = await GetConnectionAsync();
+    
+        // create and execute the CreateBarsTable command to make the bars table if it doesn't exist
+        await using var barsCmd = new NpgsqlCommand(SqlCommands.CreateBarsTable, connection);
+        await barsCmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Database 'bars' table successfully initialized.");
+    
+        // create and execute the CreateCalendarTable command to make trading_calendar table if it doesn't exist
+        await using var calendarCmd = new NpgsqlCommand(SqlCommands.CreateCalendarTable, connection);
+        await calendarCmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Database 'trading_calendar' table successfully initialized.");
         
-        await using var cmd = new NpgsqlCommand(SqlCommands.CreateBarsTable, connection);
-        await cmd.ExecuteNonQueryAsync();
-        
-        Console.WriteLine("Database tables initialized successfully.");
+        Console.WriteLine("Database tables successfully initialized.");
     }
 }

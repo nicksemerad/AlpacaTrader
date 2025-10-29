@@ -1,8 +1,16 @@
-namespace Common;
+namespace Database;
 
-
+/// <summary>
+///   This class holds all the SQL commands that are used by the DatabaseOperations class. They include initializing
+///   tables, counting the number of table rows, inserting one or many rows, and getting rows from the table that match
+///   certain parameters.
+/// </summary>
 public static class SqlCommands
 {
+    public const string GetBarsCount = """
+        SELECT COUNT(*) FROM bars
+    """;
+    
     public const string InsertBar = """
         INSERT INTO bars (symbol, timeframe, date, open, high, low, close, volume, trade_count, vwap)
         VALUES (@symbol, @timeframe, @date, @open, @high, @low, @close, @volume, @tradeCount, @vwap)
@@ -33,6 +41,10 @@ public static class SqlCommands
         );
        CREATE INDEX IF NOT EXISTS idx_bars_symbol_timeframe_date
        ON bars(symbol, timeframe, date);
+    """;
+    
+    public const string GetCalendarDaysCount = """
+        SELECT COUNT(*) FROM trading_calendar
     """;
     
     public const string InsertCalendarDay = """
