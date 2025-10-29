@@ -29,14 +29,16 @@ public class TradingDay
     public TimeOnly CloseTime { get; set; }
 
     /// <summary>
-    ///   The time that the pre-market session opens today, usually 04:00AM eastern.
+    ///   The time that the pre-market session opens today, usually 04:00AM eastern. This uses a custom
+    ///   JsonConverter when reading the calendar API response because there are errors in this field.
     /// </summary>
     [JsonProperty("session_open")]
     [JsonConverter(typeof(CalendarApiTimeOnlyConverter))]
     public TimeOnly SessionOpenTime { get; set; }
 
     /// <summary>
-    ///   The time that the after-market session closes today, usually 20:00PM eastern.
+    ///   The time that the after-market session closes today, usually 20:00PM eastern. This uses a custom
+    ///   JsonConverter when reading the calendar API response because there are errors in this field.
     /// </summary>
     [JsonProperty("session_close")]
     [JsonConverter(typeof(CalendarApiTimeOnlyConverter))]
