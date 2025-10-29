@@ -1,6 +1,5 @@
 using Common;
 using Component;
-using Database;
 
 namespace Api;
 
@@ -10,8 +9,7 @@ namespace Api;
 ///   uses them to build the API URLs. The URLs are then passed to the Request class which makes the http requests and
 ///   retrieves the API's JSON text response. This JSON text is passed to the Response class, which handles parsing it
 ///   into c# objects like Bars, Quotes, Orders, CalendarDays, etc. depending on the endpoint and parameters. Once the
-///   data has been parsed and aggregated into the list objects, the DbOperations class methods can be used to write
-///   it to corresponding SQL database tables.
+///   data has been retrieved, parsed, and aggregated, it is returned as a List.
 /// </summary>
 public static class Client
 {
@@ -102,10 +100,9 @@ public static class Client
     /// <param name="timeframe">The granularity of the historical bars i.e. one per hour, day, etc</param>
     /// <param name="startTime">DateTime the historical bars start at</param>
     /// <param name="endTime">DateTime the historical bars will end at</param>
-    /// <param name="writeToDb">Bool: if the parsed results should be written to the db or not, defaults false</param>
     /// <returns>A list holding all the scraped historical bars for the symbol</returns>
     public static async Task<List<Bar>> GetHistoricalBarsAsync(string symbol, string timeframe, DateTime startTime,
-        DateTime endTime, bool writeToDb = false)
+        DateTime endTime)
     {
         // get all the historical bars for the symbol, timeframe, and time range
         var bars = await GetAllPaginatedItemsAsync(
@@ -113,17 +110,13 @@ public static class Client
             (Response r, ref string token) => r.ParseHistoricalBars(ref token)
         );
 
-        // set the symbol and timeframe properties for every bar in the list
-        foreach (var bar in bars)
+        // set the symbol and timeframe properties for every bar in the list before returning
+        return bars.Select(bar =>
         {
             bar.Symbol = symbol;
             bar.Timeframe = timeframe;
-        }
-        
-        // if writeToDb was passed as true, write all the Bars to the database before returning the list
-        if (writeToDb) await DbOperations.InsertBarsAsync(bars);
-
-        return bars;
+            return bar;
+        }).ToList();
     }
 
     /// <summary>
@@ -151,22 +144,10 @@ public static class Client
     /// </summary>
     /// <param name="startTime">DateTime the list of CalendarDays starts at</param>
     /// <param name="endTime">DateTime the list of CalendarDays ends at</param>
-    /// <param name="writeToDb">Bool: if the parsed results should be written to the db or not, defaults false</param>
-    /// <returns>A list of all the calendar days and info that happened within the date range</returns>
-    public static async Task<List<CalendarDay>> GetCalendarDaysAsync(DateTime startTime, DateTime endTime,
-        bool writeToDb = false)
+    /// <returns>A list of all the trading calendar days' info within the date range</returns>
+    public static async Task<List<CalendarDay>> GetCalendarDaysAsync(DateTime startTime, DateTime endTime)
     {
         var response = await GetResponseAsync(Endpoints.Calendar(startTime, endTime));
-        var days = response.ParseCalendarDays();
-
-        // if writeToDb was passed as true, write all the CalendarDays to the database before returning the list
-        if (writeToDb) await DbOperations.InsertCalendarDaysAsync(days);
-
-        return days;
-    }
-    
-    public static async Task Main(string[] args)
-    {
-
+        return response.ParseCalendarDays();
     }
 }
