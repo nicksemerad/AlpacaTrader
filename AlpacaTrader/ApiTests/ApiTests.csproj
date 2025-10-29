@@ -26,4 +26,9 @@
         <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Api\Api.csproj" />
+      <ProjectReference Include="..\Component\Component.csproj" />
+    </ItemGroup>
+
 </Project>
