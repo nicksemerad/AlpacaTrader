@@ -19,8 +19,24 @@ public class Logger
     /// <summary>
     ///   A generic function that returns a new ILogger for type T that was created using the ILoggerFactory built
     ///   with the custom configuration.
+    ///   <code>
+    ///     private static ILogger _logger = Logger.Create&lt;Client&gt;()
+    ///   </code>
     /// </summary>
     /// <typeparam name="T">The category type of the ILogger</typeparam>
     /// <returns>A new category T ILogger</returns>
     public static ILogger<T> Create<T>() => Factory.CreateLogger<T>();
+    
+    /// <summary>
+    ///   An overload of the generic Create method that takes in a string with the category name instead. This is
+    ///   needed in order to create Loggers for classes that are static. When instantiating a Logger using this method,
+    ///   instead of passing in the category with T like the generic method, pass in the nameof( ClassName ) to the
+    ///   Create method parameters.
+    ///   <code>
+    ///     private static ILogger _logger = Logger.Create(nameof(Client));
+    ///   </code>
+    /// </summary>
+    /// <param name="categoryName">The name of the logger category, determined by nameof(class to log)</param>
+    /// <returns>A new categoryName ILogger</returns>
+    public static ILogger Create(string categoryName) => Factory.CreateLogger(categoryName);
 }
