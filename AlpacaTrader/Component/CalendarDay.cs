@@ -47,12 +47,12 @@ public class CalendarDay
     /// <summary>
     ///   Gets today's market open datetime in UTC.
     /// </summary>
-    public DateTime GetMarketOpenUtc() => DateTimeUtils.ConvertEstToUtc(new DateTime(Date, OpenTime));
+    public DateTime OpenToUtc() => DateTimeUtils.ConvertEstToUtc(new DateTime(Date, OpenTime));
 
     /// <summary>
     ///   Gets today's market close datetime in UTC.
     /// </summary>
-    public DateTime GetMarketCloseUtc() => DateTimeUtils.ConvertEstToUtc(new DateTime(Date, CloseTime));
+    public DateTime CloseToUtc() => DateTimeUtils.ConvertEstToUtc(new DateTime(Date, CloseTime));
 
     /// <summary>
     ///   Overrides the object ToString so CalendarDays can be printed showing the date, market open time, and market
