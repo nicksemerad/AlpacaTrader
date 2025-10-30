@@ -73,10 +73,14 @@ public static class Client
     /// <returns>A list of all the latest Bars returned from the endpoint</returns>
     public static async Task<List<Bar>> GetLatestBarsAsync(List<string> symbols)
     {
-        ClientLog.LogDebug("[{Symbols}]: LatestBars", string.Join(", ", symbols));
-        
+        // get the latest bars page for the symbols and parse them all into a list
         var response = await GetResponseAsync(Endpoints.LatestBars(symbols));
-        return response.ParseBars();
+        var bars = response.ParseBars();
+
+        // log the results before returning the list
+        ClientLog.LogDebug("[{Symbols}]: LatestBars retrieved {Count} latest quotes",
+            string.Join(", ", symbols), $"{bars.Count:N0}");
+        return bars;
     }
 
     /// <summary>
@@ -87,10 +91,14 @@ public static class Client
     /// <returns>A list of all the latest QuotePairs returned from the endpoint</returns>
     public static async Task<List<QuotePair>> GetLatestQuotesAsync(List<string> symbols)
     {
-        ClientLog.LogDebug("[{Symbols}]: LatestQuotes", string.Join(", ", symbols));
-        
+        // get the latest quotes page for the symbols and parse them all into a list
         var response = await GetResponseAsync(Endpoints.LatestQuotes(symbols));
-        return response.ParseQuotes();
+        var quotes = response.ParseQuotes();
+
+        // log the results before returning the list
+        ClientLog.LogDebug("[{Symbols}]: LatestQuotes retrieved {Count} latest quotes",
+            string.Join(", ", symbols), $"{quotes.Count:N0}");
+        return quotes;
     }
 
     /// <summary>
@@ -114,15 +122,16 @@ public static class Client
     public static async Task<List<Bar>> GetHistoricalBarsAsync(string symbol, string timeframe, DateTime startTime,
         DateTime endTime)
     {
-        ClientLog.LogDebug("[{Symbol}({Timeframe})]: HistoricalBars {Start} to {End}",
-            symbol, timeframe, DateTimeUtils.ToUrlString(startTime), DateTimeUtils.ToUrlString(endTime));
-        
         // get all the historical bars for the symbol, timeframe, and time range
         var bars = await GetAllPaginatedItemsAsync(
             Endpoints.HistoricalBars(symbol, timeframe, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalBars(ref token)
         );
-        
+
+        // log the results before returning the list (and adding the symbol/ timeframe in this case)
+        ClientLog.LogDebug("[{Symbol}(1 bar/ {Timeframe})]: HistoricalBars {Start} to {End} retrieved {Count} bars",
+            symbol, timeframe, $"'{startTime:yy-MM-dd}", $"'{endTime:yy-MM-dd}", $"{bars.Count:N0}");
+
         // set the symbol and timeframe properties for every bar in the list before returning
         return bars.Select(bar =>
         {
@@ -143,12 +152,16 @@ public static class Client
     public static async Task<List<QuotePair>> GetHistoricalQuotesAsync(string symbol, DateTime startTime,
         DateTime endTime)
     {
-        ClientLog.LogDebug("[{Symbol}]: HistoricalQuotes {Start} to {End}",
-            symbol, DateTimeUtils.ToUrlString(startTime), DateTimeUtils.ToUrlString(endTime));
-        return await GetAllPaginatedItemsAsync(
+        // get all the historical quotes for the symbol in the time range
+        var quotes = await GetAllPaginatedItemsAsync(
             Endpoints.HistoricalQuotes(symbol, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalQuotes(ref token)
         );
+
+        // log the results before returning the list
+        ClientLog.LogDebug("[{Symbol}]: HistoricalQuotes [{Start} to {End}] retrieved {Count} quotes",
+            symbol, $"'{startTime:yy-MM-dd}", $"'{endTime:yy-MM-dd}", $"{quotes.Count:N0}");
+        return quotes;
     }
 
     /// <summary>
@@ -162,9 +175,13 @@ public static class Client
     /// <returns>A list of all the trading calendar days' info within the date range</returns>
     public static async Task<List<CalendarDay>> GetCalendarDaysAsync(DateTime startTime, DateTime endTime)
     {
-        ClientLog.LogDebug("CalendarDays {Start} to {End}",
-            DateTimeUtils.ToUrlString(startTime), DateTimeUtils.ToUrlString(endTime));
+        // get and parse the CalendarDays that fall within the time range
         var response = await GetResponseAsync(Endpoints.Calendar(startTime, endTime));
-        return response.ParseCalendarDays();
+        var days = response.ParseCalendarDays();
+
+        // log the results before returning the list
+        ClientLog.LogDebug("CalendarDays [{Start} to {End}] retrieved {Count} trading day dates",
+            $"'{startTime:yy-MM-dd}", $"'{endTime:yy-MM-dd}", $"{days.Count:N0}");
+        return days;
     }
 }

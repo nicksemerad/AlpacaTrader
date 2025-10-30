@@ -28,7 +28,7 @@ public class Request
     /// <summary>
     ///   The url that will be requested, in string form.
     /// </summary>
-    private string _url;
+    private readonly string _url;
 
     /// <summary>
     ///   Builds a new Request for the url. Headers for the alpaca secret key and API key are added, as well as a
