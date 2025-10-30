@@ -7,14 +7,23 @@ namespace Common;
 ///   configuration. Right now that configuration is just console logging and a minimum level of "Information", but in
 ///   the future I plan to include logging to files so they can be kept for longer periods of time.
 /// </summary>
-public class Logger
+public static class Logger
 {
     /// <summary>
     ///   A private ILoggerFactory that is created with the custom configuration (AddConsole adds console logging,
     ///   SetMinimumLevel sets the lowest level of event that should still be logged).
     /// </summary>
-    private static readonly ILoggerFactory Factory = 
-        LoggerFactory.Create(config => config.AddConsole().SetMinimumLevel(LogLevel.Information));
+    private static readonly ILoggerFactory Factory =
+        LoggerFactory.Create(builder =>
+        {
+            builder.AddSimpleConsole(
+                options =>
+                {
+                    options.SingleLine = true; // puts all the output on one line
+                    options.TimestampFormat = "HH:mm:ss "; // adds a simple timestamp to the logged line
+                }
+            ).SetMinimumLevel(LogLevel.Information);
+        });
     
     /// <summary>
     ///   A generic function that returns a new ILogger for type T that was created using the ILoggerFactory built

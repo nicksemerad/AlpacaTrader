@@ -1,5 +1,6 @@
 using Common;
 using Component;
+using Microsoft.Extensions.Logging;
 
 namespace Api;
 
@@ -13,6 +14,11 @@ namespace Api;
 /// </summary>
 public static class Client
 {
+    /// <summary>
+    ///   The ILogger used to log events in this class.
+    /// </summary>
+    private static readonly ILogger ClientLog = Logger.Create(nameof(Client));
+
     /// <summary>
     ///   This delegate is similar to a ResponseParser but has an additional parameter, which is a string holding the
     ///   next page token, passed by reference. This lets the parser update the reference for the next page token that
@@ -67,6 +73,8 @@ public static class Client
     /// <returns>A list of all the latest Bars returned from the endpoint</returns>
     public static async Task<List<Bar>> GetLatestBarsAsync(List<string> symbols)
     {
+        ClientLog.LogDebug("[{Symbols}]: LatestBars", string.Join(", ", symbols));
+        
         var response = await GetResponseAsync(Endpoints.LatestBars(symbols));
         return response.ParseBars();
     }
@@ -79,6 +87,8 @@ public static class Client
     /// <returns>A list of all the latest QuotePairs returned from the endpoint</returns>
     public static async Task<List<QuotePair>> GetLatestQuotesAsync(List<string> symbols)
     {
+        ClientLog.LogDebug("[{Symbols}]: LatestQuotes", string.Join(", ", symbols));
+        
         var response = await GetResponseAsync(Endpoints.LatestQuotes(symbols));
         return response.ParseQuotes();
     }
@@ -104,12 +114,15 @@ public static class Client
     public static async Task<List<Bar>> GetHistoricalBarsAsync(string symbol, string timeframe, DateTime startTime,
         DateTime endTime)
     {
+        ClientLog.LogDebug("[{Symbol}({Timeframe})]: HistoricalBars {Start} to {End}",
+            symbol, timeframe, DateTimeUtils.ToUrlString(startTime), DateTimeUtils.ToUrlString(endTime));
+        
         // get all the historical bars for the symbol, timeframe, and time range
         var bars = await GetAllPaginatedItemsAsync(
             Endpoints.HistoricalBars(symbol, timeframe, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalBars(ref token)
         );
-
+        
         // set the symbol and timeframe properties for every bar in the list before returning
         return bars.Select(bar =>
         {
@@ -130,6 +143,8 @@ public static class Client
     public static async Task<List<QuotePair>> GetHistoricalQuotesAsync(string symbol, DateTime startTime,
         DateTime endTime)
     {
+        ClientLog.LogDebug("[{Symbol}]: HistoricalQuotes {Start} to {End}",
+            symbol, DateTimeUtils.ToUrlString(startTime), DateTimeUtils.ToUrlString(endTime));
         return await GetAllPaginatedItemsAsync(
             Endpoints.HistoricalQuotes(symbol, startTime, endTime),
             (Response r, ref string token) => r.ParseHistoricalQuotes(ref token)
@@ -147,6 +162,8 @@ public static class Client
     /// <returns>A list of all the trading calendar days' info within the date range</returns>
     public static async Task<List<CalendarDay>> GetCalendarDaysAsync(DateTime startTime, DateTime endTime)
     {
+        ClientLog.LogDebug("CalendarDays {Start} to {End}",
+            DateTimeUtils.ToUrlString(startTime), DateTimeUtils.ToUrlString(endTime));
         var response = await GetResponseAsync(Endpoints.Calendar(startTime, endTime));
         return response.ParseCalendarDays();
     }
