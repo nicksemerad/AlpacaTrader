@@ -13,7 +13,7 @@ public class Request
     /// <summary>
     ///   The ILogger used to log events in this class.
     /// </summary>
-    private static readonly ILogger RequestLog = Logger.Create<Request>();
+    private static readonly ILogger RequestLog = Logger.Create(nameof(Request));
 
     /// <summary>
     ///   The RestClient object that will be used to make the request.
