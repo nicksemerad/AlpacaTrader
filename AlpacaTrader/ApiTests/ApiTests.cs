@@ -89,12 +89,11 @@ public sealed class ApiTests
     [TestMethod]
     public async Task TestGetHistoricalBars_OneDayThirtyMinsBars_ReturnsExpectedBarsCount()
     {
-        DateTime start = Times[0], end = Times[2]; // market open to market close (6.5 hours total)
         const string timeframe = "30T"; // bar timeframe of 30 mins (1 bar per 30 mins)
-        const int expectedBarsPerDay = 13; // time range of 6.5 hours / 30 mins per bar = 13 bars expected
-
+        DateTime start = Times[0], end = Times[2]; // market open to market close (6.5 hours total)
         var bars = await Client.GetHistoricalBarsAsync(Symbols[0], timeframe, start, end);
 
+        const int expectedBarsPerDay = 13; // time range of 6.5 hours / 30 mins per bar = 13 bars expected
         Assert.IsTrue(bars.Count > 0);
         Assert.AreEqual(expectedBarsPerDay, bars.Count, 1); // delta of 1 (first/ last bars can be early/ late)
         Assert.IsTrue(bars.All(b => b.Symbol == Symbols[0]));
@@ -125,6 +124,7 @@ public sealed class ApiTests
     {
         DateTime start = Times[3], end = Times[0]; // Oct 21 until Oct 27
         var days = await Client.GetCalendarDaysAsync(start, end);
+
         Assert.IsTrue(days.Count > 0);
         Assert.AreEqual(5, days.Count); // (T, W, Th, F, S, Su, M)
     }
