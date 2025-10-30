@@ -8,12 +8,12 @@ public static class Endpoints
     /// <summary>
     ///   The base url for all API endpoints needed when making paper trades.
     /// </summary>
-    private const string Trade = "https://paper-api.alpaca.markets/v2";
+    private const string PaperApi = "https://paper-api.alpaca.markets/v2";
 
     /// <summary>
     ///   The base url for all API endpoints needed to get stock data.
     /// </summary>
-    private const string Data = "https://data.alpaca.markets/v2/stocks";
+    private const string DataApi = "https://data.alpaca.markets/v2/stocks";
 
     /// <summary>
     ///   Build the endpoint for getting the latest data from the endpoint name using the passed symbols.
@@ -23,7 +23,7 @@ public static class Endpoints
     /// <returns>The full API endpoint url for the parameters</returns>
     private static string LatestUrl(string name, List<string> symbols)
     {
-        return $"{Data}/{name}/latest?symbols={string.Join(",", symbols)}";
+        return $"{DataApi}/{name}/latest?symbols={string.Join(",", symbols)}";
     }
 
     /// <summary>
@@ -67,13 +67,13 @@ public static class Endpoints
     ///   Get the API endpoint url to get the account's trading information.
     /// </summary>
     /// <returns>The API endpoint url for the account's trading information</returns>
-    public static string Account() => $"{Trade}/account";
+    public static string Account() => $"{PaperApi}/account";
 
     /// <summary>
     ///   Get the API endpoint url to get the account's assets.
     /// </summary>
     /// <returns>The API endpoint url for the account assets</returns>
-    public static string Assets() => $"{Trade}/assets";
+    public static string Assets() => $"{PaperApi}/assets";
 
     /// <summary>
     ///   Builds and returns the endpoint url for all the calendar days that the market opened for, in the specified
@@ -82,8 +82,8 @@ public static class Endpoints
     /// <param name="startTime">The first day of the date-time range to get the trading days in</param>
     /// <param name="endTime">The last day of the date-time range to get the trading days in</param>
     /// <returns>The trading days calendar endpoint url for the specified time range</returns>
-    public static string Calendar(DateTime startTime, DateTime endTime) 
-        => HistoricalUrl($"{Trade}/calendar", startTime, endTime);
+    public static string Calendar(DateTime startTime, DateTime endTime)
+        => HistoricalUrl($"{PaperApi}/calendar", startTime, endTime);
 
     /// <summary>
     ///   Get the latest bar for the specified stock ticker symbol(s).
@@ -124,7 +124,7 @@ public static class Endpoints
         List<string> additionalParams = [$"symbols={symbol}", $"timeframe={timeframe}"];
 
         // pass the list into the HistoricalUrl method to include them in the url and return the result
-        return HistoricalUrl($"{Data}/bars", startTime, endTime, additionalParams);
+        return HistoricalUrl($"{DataApi}/bars", startTime, endTime, additionalParams);
     }
 
     /// <summary>
@@ -138,7 +138,7 @@ public static class Endpoints
     public static string HistoricalQuotes(string symbol, DateTime startTime, DateTime endTime)
     {
         // the quotes endpoint has no additional params, so just return the string result from HistoricalUrl 
-        return HistoricalUrl($"{Data}/{symbol}/quotes", startTime, endTime);
+        return HistoricalUrl($"{DataApi}/{symbol}/quotes", startTime, endTime);
     }
 
     /// <summary>

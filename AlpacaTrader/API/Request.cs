@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Common;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RestSharp;
 
 namespace Api;
@@ -8,6 +10,11 @@ namespace Api;
 /// </summary>
 public class Request
 {
+    /// <summary>
+    ///   The ILogger used to log events in this class.
+    /// </summary>
+    private static readonly ILogger RequestLog = Logger.Create<Request>();
+
     /// <summary>
     ///   The RestClient object that will be used to make the request.
     /// </summary>
@@ -19,6 +26,11 @@ public class Request
     private readonly RestRequest _request;
 
     /// <summary>
+    ///   The url that will be requested, in string form.
+    /// </summary>
+    private string _url;
+
+    /// <summary>
     ///   Builds a new Request for the url. Headers for the alpaca secret key and API key are added, as well as a
     ///   header stating to accept json responses.
     /// </summary>
@@ -28,6 +40,7 @@ public class Request
         var opts = new RestClientOptions(url);
         _client = new RestClient(opts);
         _request = new RestRequest();
+        _url = url;
         AddHeaders();
     }
 
@@ -66,9 +79,15 @@ public class Request
     /// <returns>The Request response's content string, or an empty string if there was no response content</returns>
     public async Task<string> GetAsync()
     {
+        // make the request and log the result details
         var response = await _client.GetAsync(_request);
-        // log the request to the console
-        Console.WriteLine($"REQUEST: {_client.Options.BaseUrl?.ToString()} STATUS: {response.StatusCode}");
+        if (response.Content is null)
+            RequestLog.LogError("REQUEST FAILED: response content is null");
+        else
+            RequestLog.LogInformation("=> {Url} [STATUS: {Code}] - {Desc}", _url, (int)response.StatusCode,
+                response.StatusCode);
+
+        // return an empty string if content is null
         return response.Content ?? string.Empty;
     }
 }
