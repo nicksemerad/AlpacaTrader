@@ -148,7 +148,7 @@ public static class DbOperations
     /// <summary>
     ///   Gets all calendar days within a date range from the database.
     /// </summary>
-    public static async Task<List<CalendarDay>> GetCalendarDaysAsync(DateOnly startDate, DateOnly endDate)
+    public static async Task<List<CalendarDay>> GetCalendarDaysAsync(DateTime startDate, DateTime endDate)
     {
         var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command with the GetCalendarDaysByDateRange sql query
@@ -156,8 +156,8 @@ public static class DbOperations
         await using var cmd = new NpgsqlCommand(SqlCommands.GetCalendarDaysByDateRange, connection);
 
         // add the GetCalendarDaysByDateRange parameters to the command
-        cmd.Parameters.AddWithValue("startDate", startDate.ToDateTime(TimeOnly.MinValue));
-        cmd.Parameters.AddWithValue("endDate", endDate.ToDateTime(TimeOnly.MinValue));
+        cmd.Parameters.AddWithValue("startDate", startDate.Date);
+        cmd.Parameters.AddWithValue("endDate", endDate.Date);
 
         // make a list to hold the CalendarDays and get a reader for the data from executing the command
         var days = new List<CalendarDay>();
