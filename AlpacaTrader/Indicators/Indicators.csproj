@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Component\Component.csproj" />
+      <ProjectReference Include="..\Database\Database.csproj" />
     </ItemGroup>
 
     <ItemGroup>

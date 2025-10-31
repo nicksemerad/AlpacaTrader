@@ -1,4 +1,5 @@
 ﻿using Component;
+using Database;
 using Skender.Stock.Indicators;
 
 namespace Indicators;
@@ -9,15 +10,25 @@ namespace Indicators;
 /// </summary>
 public static class Indicators
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        var b = new Bar();
-        // Quote q = new Quote(b.Timestamp, b.Open, b.High, b.Low, b.Close, b.Volume);
-        List<Bar> quotes = [];
-        var results = quotes.GetSma(20);
-        foreach (var result in results)
+        List<Bar> quotes = await DbOperations.GetBarsBySymbolTimeframeAsync(
+            "SPY", "1T", new DateTime(2023, 1, 1), new DateTime(2023, 6, 1));
+
+        var results = quotes.GetMacd().ToList();
+
+        double? min = 0;
+        double? max = 0;
+        
+        foreach (var value in results.Select(t => t.Macd))
         {
-            Console.WriteLine(result);
+            if (value < min) min = value;
+            if (value > max) max = value;
         }
+        
+        Console.WriteLine($"COUNT: {results.Count:N0}");
+        Console.WriteLine($"MAX: {max:F6}");
+        Console.WriteLine($"MIN: {min:F6}");
+        Console.WriteLine($"RANGE: {max - min:F6}");
     }
 }
