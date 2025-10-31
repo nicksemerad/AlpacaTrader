@@ -20,7 +20,7 @@ public static class Logger
                 options =>
                 {
                     options.SingleLine = true; // puts all the output on one line
-                    options.TimestampFormat = "HH:mm:ss"; // adds a simple timestamp to the logged line
+                    options.TimestampFormat = "[HH:mm:ss] "; // adds a timestamp (space is on purpose)
                 }
             ).SetMinimumLevel(LogLevel.Information);
         });
