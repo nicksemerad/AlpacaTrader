@@ -120,8 +120,8 @@ public static class Endpoints
     /// <returns>The API endpoint url for the next page of historical bars for the symbol</returns>
     public static string HistoricalBars(string symbol, string timeframe, DateTime startTime, DateTime endTime)
     {
-        // the bars endpoint url needs a symbol and timeframe so add them to a list in the url parameter format
-        List<string> additionalParams = [$"symbols={symbol}", $"timeframe={timeframe}"];
+        // the bars endpoint needs a symbol and timeframe, adjustment gets normalized prices from splits or spin-offs
+        List<string> additionalParams = [$"symbols={symbol}", $"timeframe={timeframe}", "adjustment=split,spin-off"];
 
         // pass the list into the HistoricalUrl method to include them in the url and return the result
         return HistoricalUrl($"{DataApi}/bars", startTime, endTime, additionalParams);
