@@ -1,34 +1,49 @@
 ﻿using Component;
-using Database;
 using Skender.Stock.Indicators;
 
 namespace Indicators;
 
 /// <summary>
-///   This class handles stock price indicators' calculations so they can be used in strategies, visualizations,
-///   backtesting, etc.
+///   Simple Moving Average indicator manager.
 /// </summary>
-public static class Indicators
+public class SmaIndicator
 {
-    public static async Task Main(string[] args)
-    {
-        List<Bar> quotes = await DbOperations.GetBarsBySymbolTimeframeAsync(
-            "SPY", "1T", new DateTime(2023, 1, 1), new DateTime(2023, 6, 1));
+    private readonly List<Bar> _bars;
+    private List<SmaResult>? _series;
+}
 
-        var results = quotes.GetMacd().ToList();
+/// <summary>
+///   Exponential Moving Average indicator manager.
+/// </summary>
+public class EmaIndicator
+{
+    private readonly List<Bar> _bars;
+    private List<EmaResult>? _series;
+}
 
-        double? min = 0;
-        double? max = 0;
-        
-        foreach (var value in results.Select(t => t.Macd))
-        {
-            if (value < min) min = value;
-            if (value > max) max = value;
-        }
-        
-        Console.WriteLine($"COUNT: {results.Count:N0}");
-        Console.WriteLine($"MAX: {max:F6}");
-        Console.WriteLine($"MIN: {min:F6}");
-        Console.WriteLine($"RANGE: {max - min:F6}");
-    }
+/// <summary>
+///   Moving Average Convergence Divergence indicator manager.
+/// </summary>
+public class MacdIndicator
+{
+    private readonly List<Bar> _bars;
+    private List<MacdResult>? _series;
+}
+
+/// <summary>
+///   Relative Strength Index indicator manager.
+/// </summary>
+public class RsiIndicator
+{
+    private readonly List<Bar> _bars;
+    private List<RsiResult>? _series;
+}
+
+/// <summary>
+///   Bollinger Bands indicator manager.
+/// </summary>
+public class BollingerBandsIndicator
+{
+    private readonly List<Bar> _bars;
+    private List<BollingerBandsResult>? _series;
 }
