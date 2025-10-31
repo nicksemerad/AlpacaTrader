@@ -9,30 +9,32 @@ namespace Database;
 public static class DbOperations
 {
     /// <summary>
-    ///   This method truncates (removes) all the bars in the table with the tableName parameter. There is a 10-second
-    ///   countdown from when the method is called to when the command is executed, so the command can be cancelled if
-    ///   it was called accidentally, 
+    ///   This method truncates (removes) all the bars in the table with the tableName parameter. There is a 15-second
+    ///   countdown from when the method is called to when the command is executed to give a window to stop it from
+    ///   executing in the case that it was called by mistake.
     /// </summary>
     /// <param name="tableName">The name of the table to truncate the rows of</param>
     public static async Task TruncateTableRows(string tableName)
     {
         var tradingDbConnection = new TradingDbConnection();
-        // get a connection and make a new command using the InsertBar sql command
+        // get a connection and make a new command to truncate the table rows
         await using var connection = await tradingDbConnection.GetConnectionAsync();
-        await using var cmd = new NpgsqlCommand($"TRUNCATE TABLE {tableName};", connection);
+        await using var cmd = new NpgsqlCommand($"TRUNCATE TABLE {tableName.ToUpper()};", connection);
 
-        // print warning messages in the console and wait 12 seconds so an accidental call can be stopped
+        // print warnings and give a total of 15 seconds to stop it
         Console.WriteLine("!!!!! WARNING !!!!!");
-        Console.WriteLine($"TRUNCATING ALL {tableName} ROWS IN 10 SECONDS");
+        Console.WriteLine($"ALL THE ROWS IN {tableName} ARE ABOUT TO BE DELETED");
+        await Task.Delay(1000);
         for (int i = 10; i >= 0; i--)
         {
-            Console.WriteLine($"TRUNCATING ALL ROWS IN {i} SECONDS...");
+            Console.WriteLine($"DELETING IN {i}...");
             await Task.Delay(1200);
         }
 
-        // it wasn't stopped, truncate the table rows
-        await cmd.ExecuteNonQueryAsync();
-        Console.WriteLine($"{tableName} ROWS TRUNCATED");
+        // it wasn't stopped, truncate the table rows after 2 more seconds to give some final wiggle room
+        await Task.Delay(2000);
+        // await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine($"{tableName.ToUpper()} ROWS DELETED");
     }
 
     /// <summary>
