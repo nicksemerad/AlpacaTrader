@@ -9,6 +9,33 @@ namespace Database;
 public static class DbOperations
 {
     /// <summary>
+    ///   This method truncates (removes) all the bars in the table with the tableName parameter. There is a 10-second
+    ///   countdown from when the method is called to when the command is executed, so the command can be cancelled if
+    ///   it was called accidentally, 
+    /// </summary>
+    /// <param name="tableName">The name of the table to truncate the rows of</param>
+    public static async Task TruncateTableRows(string tableName)
+    {
+        var tradingDbConnection = new TradingDbConnection();
+        // get a connection and make a new command using the InsertBar sql command
+        await using var connection = await tradingDbConnection.GetConnectionAsync();
+        await using var cmd = new NpgsqlCommand($"TRUNCATE TABLE {tableName};", connection);
+
+        // print warning messages in the console and wait 12 seconds so an accidental call can be stopped
+        Console.WriteLine("!!!!! WARNING !!!!!");
+        Console.WriteLine($"TRUNCATING ALL {tableName} ROWS IN 10 SECONDS");
+        for (int i = 10; i >= 0; i--)
+        {
+            Console.WriteLine($"TRUNCATING ALL ROWS IN {i} SECONDS...");
+            await Task.Delay(1200);
+        }
+
+        // it wasn't stopped, truncate the table rows
+        await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine($"{tableName} ROWS TRUNCATED");
+    }
+
+    /// <summary>
     ///   Inserts a bar into the database.
     /// </summary>
     public static async Task InsertBarAsync(Bar bar)
@@ -178,7 +205,7 @@ public static class DbOperations
 
         return days;
     }
-    
+
     /// <summary>
     ///   Gets the total number of bars in the bars database table as a long. If the sql command returns null, -1
     ///   is returned instead.
@@ -190,12 +217,12 @@ public static class DbOperations
         // get a connection and make a new command with the GetBarsCount sql query
         await using var connection = await tradingDbConnection.GetConnectionAsync();
         await using var cmd = new NpgsqlCommand(SqlCommands.GetBarsCount, connection);
-        
+
         // execute the command and return the first and only row, if the row is null return -1
         var result = await cmd.ExecuteScalarAsync();
         return result != null ? Convert.ToInt64(result) : -1;
     }
-    
+
     /// <summary>
     ///   Gets the total number of CalendarDays in the trading_calendar database table as a long. If the sql command
     ///   returns null, -1 is returned instead.
@@ -207,7 +234,7 @@ public static class DbOperations
         // get a connection and make a new command with the GetCalendarDaysCount sql query
         await using var connection = await tradingDbConnection.GetConnectionAsync();
         await using var cmd = new NpgsqlCommand(SqlCommands.GetCalendarDaysCount, connection);
-        
+
         // execute the command and return the first and only row, if the row is null return -1
         var result = await cmd.ExecuteScalarAsync();
         return result != null ? Convert.ToInt64(result) : -1;
