@@ -37,15 +37,23 @@ public static class DateTimeUtils
     /// <returns>A new DateTime object that has the same time as the parameter, but in UTC</returns>
     public static DateTime ConvertEstToUtc(DateTime dateTime)
     {
-        try
-        {
-            var estZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-            return TimeZoneInfo.ConvertTimeToUtc(dateTime, estZoneInfo);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"{ex.GetType()} occurred while converting DateTime in EST to UTC: {ex.Message}");
-            throw;
-        }
+        var estZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+        // if the time zone isn't unspecified, force it to be treated like EST
+        if (dateTime.Kind != DateTimeKind.Unspecified)
+            dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+
+        return TimeZoneInfo.ConvertTimeToUtc(dateTime, estZoneInfo);
+    }
+
+    public static DateTime ConvertUtcToEst(DateTime dateTimeUtc)
+    {
+        var estZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+        // if the time zone isn't UTC, force it to be treated like it
+        if (dateTimeUtc.Kind != DateTimeKind.Utc)
+            dateTimeUtc = DateTime.SpecifyKind(dateTimeUtc, DateTimeKind.Utc);
+
+        return TimeZoneInfo.ConvertTimeFromUtc(dateTimeUtc, estZoneInfo);
     }
 }
