@@ -10,8 +10,17 @@ using Component;
 public abstract class StrategyBase
 {
     private IList<Bar> _bars;
-
-
+    
+    public void Initialize(List<Bar> historicalBars)
+    {
+        _bars = historicalBars;
+    }
+    
+    public void Update(Bar newBar)
+    {
+        _bars.Add(newBar);
+    }
+    
     /// <summary>
     ///   When there is a new latest bar, use the past bars to determine the strategy's signal (i.e. buy, sell, wait)
     /// </summary>
