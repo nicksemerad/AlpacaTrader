@@ -33,8 +33,8 @@ public static class DataPipeline
     /// <summary>
     ///   This method starts by getting all the trading calendar days from the database that land within the time
     ///   range. These calendar days are then used along with a symbol to retrieve the symbol's bars for every
-    ///   individual calendar day, from when the market opens until it closes, and write them to the database. This is
-    ///   repeated for each of the symbols in the list parameter.
+    ///   individual calendar day, and write them to the database. This is repeated for each of the symbols in the
+    ///   list parameter.
     /// </summary>
     /// <param name="symbols">The stock symbols to get the historical bars for</param>
     /// <param name="timeframe">The time between each bar</param>
@@ -53,13 +53,13 @@ public static class DataPipeline
     }
 
     /// <summary>
-    ///   This method handles the actual API calls that are made to get the symbol's bars on each day in the calendar,
-    ///   from market open until close. To prevent making an API call to get bars that have already been retrieved and
-    ///   stored in the database, the AreBarsAlreadyInDb method is called at the start of the process for each day. If
-    ///   there are already bars with the same parameters, the rest of the day's process is skipped, and the loop
-    ///   continues onto the next calendar day. If the bars are yet to be retrieved, an API call is made for them and
-    ///   they are stored in the database. After each API call, the thread waits for 300ms before continuing, in order
-    ///   to not surpass the 200/minute rate limit that the Alpaca API has.
+    ///   This method handles the actual API calls that are made to get the symbol's bars on each day in the calendar.
+    ///   To prevent making an API call to get bars that have already been retrieved and stored in the database, the
+    ///   AreBarsAlreadyInDb method is called at the start of the process for each day. If there are already bars with
+    ///   the same parameters, the rest of the day's process is skipped, and the loop continues onto the next calendar
+    ///   day. If the bars are yet to be retrieved, an API call is made for them and they are stored in the database.
+    ///   After each API call, the thread waits for 300ms before continuing, in order to not surpass the 200/minute
+    ///   rate limit that the Alpaca API has.
     /// </summary>
     /// <param name="symbol">The stock symbol to get the historical bars for</param>
     /// <param name="timeframe">The time between each bar</param>
@@ -70,13 +70,17 @@ public static class DataPipeline
         DataLog.LogDebug("Retrieving {S} {T} HistoricalBars", symbol, timeframe);
         foreach (var day in calendar)
         {
+            // use the day to get 00:00 today up to 00:00 of the next day
+            var dayStart = day.Date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var dayEnd = day.Date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+
             // if we already have the bars, skip to the next day
-            if (await AreBarsAlreadyInDb(symbol, timeframe, day.OpenToUtc(), day.CloseToUtc())) continue;
+            if (await AreBarsAlreadyInDb(symbol, timeframe, dayStart, dayEnd)) continue;
 
             try
             {
                 // try to get the bars from the API and insert them into the database
-                var bars = await Client.GetHistoricalBarsAsync(symbol, timeframe, day.OpenToUtc(), day.CloseToUtc());
+                var bars = await Client.GetHistoricalBarsAsync(symbol, timeframe, dayStart, dayEnd);
                 var numRowsBefore = await DbOperations.GetBarsCountAsync();
                 await DbOperations.InsertBarsAsync(bars);
                 var numRowsAfter = await DbOperations.GetBarsCountAsync();
@@ -110,8 +114,8 @@ public static class DataPipeline
         // get all the bars in the database that exactly match the parameters
         var barsInDb = await DbOperations.GetBarsBySymbolTimeframeAsync(symbol, timeframe, start, end);
 
-        // if the database doesn't have the bars return false
-        if (barsInDb.Count == 0) return false;
+        // if the database doesn't have the bars (ignoring 1-minute overlaps on each end) return false
+        if (barsInDb.Count < 2) return false;
 
         DataLog.LogDebug("Already have {Num:N0} {Symbol} bars from {Day:yyyy-MM-dd} in the database",
             barsInDb.Count, symbol, start.Date);
@@ -120,8 +124,8 @@ public static class DataPipeline
 
     /// <summary>
     ///   This method gets the calendar of trading days in the year range and writes them to the database. The
-    ///   CalendarDays are then used to retrieve all the 1-minute bars for each day, from market open to close, for the
-    ///   three starter stock symbols.
+    ///   CalendarDays are then used to retrieve all the 1-minute bars for each day, for the three starter stock
+    ///   symbols.
     /// </summary>
     private static async Task WriteDaysAndStarterStocks1MinBars(int startYear, int endYear)
     {
