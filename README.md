@@ -9,7 +9,7 @@ in the past.
 
 This is obviously a daunting task and I am not planning on finishing it any time soon, 
 but working towards the ultimate goal has been a great way to learn. As time goes on it will
-most likely expand to use more APIs besides Alpaca, trade more than stocks, etc. 
+most likely expand to use more APIs besides Alpaca, trade more than stocks, etc. Also as I continue through my degree, I plan to convert this into C++ most likely.
 
 
 ## Solution Projects
