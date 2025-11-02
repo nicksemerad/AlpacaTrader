@@ -1,9 +1,10 @@
+namespace Api;
+
 using Common;
 using Database;
 using Component;
 using Microsoft.Extensions.Logging;
 
-namespace Api;
 
 /// <summary>
 ///   This class is the ETL Pipeline for Alpaca API data. It extracts the data from specific endpoints using Client
