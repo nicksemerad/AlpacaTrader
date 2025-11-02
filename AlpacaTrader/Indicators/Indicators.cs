@@ -1,9 +1,10 @@
-﻿using Common;
+﻿namespace Indicators;
+
+using Common;
 using Component;
 using Skender.Stock.Indicators;
 using Microsoft.Extensions.Logging;
 
-namespace Indicators;
 
 /// <summary>
 ///   This method handles the process of converting a list of bars to a list of indicator values, as well as verifying
