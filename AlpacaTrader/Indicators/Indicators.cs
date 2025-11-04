@@ -25,9 +25,11 @@ public static class Indicators
     /// <exception cref="InvalidQuotesException">If there aren't enough bars to calculate the SMA</exception>
     public static List<SmaResult> GetSmaSeries(List<Bar> bars, int period)
     {
-        return bars.Count < period + 1
-            ? throw new InvalidQuotesException("SMA requires at least (period + 1) bars")
-            : bars.GetSma(period).ToList();
+        if (bars.Count < period)
+            throw new InvalidQuotesException("SMA requires at least (period + 1) bars");
+
+        var relevantBars = bars.TakeLast(period + 1);
+        return relevantBars.GetSma(period).ToList();
     }
 
     /// <summary>
@@ -47,7 +49,8 @@ public static class Indicators
         if (bars.Count < period + 250)
             IndicatorLogger.LogWarning("EMA requires (period+250) bars for accurate results");
 
-        return bars.GetEma(period).ToList();
+        var relevantBars = bars.TakeLast(period + 251);
+        return relevantBars.GetEma(period).ToList();
     }
 
     /// <summary>
@@ -71,7 +74,8 @@ public static class Indicators
         if (bars.Count < period + 250)
             IndicatorLogger.LogWarning("MACD requires (Slow+Signal+250) bars for accurate results");
 
-        return bars.GetMacd(fastPeriod, slowPeriod, signalPeriod).ToList();
+        var relevantBars = bars.TakeLast(period + 251);
+        return relevantBars.GetMacd(fastPeriod, slowPeriod, signalPeriod).ToList();
     }
 
     /// <summary>
@@ -88,7 +92,8 @@ public static class Indicators
         if (bars.Count < 10 * period)
             IndicatorLogger.LogWarning("RSI requires at least (10*period) bars for accurate results");
 
-        return bars.GetRsi(period).ToList();
+        var relevantBars = bars.TakeLast(10 * period + 1);
+        return relevantBars.GetRsi(period).ToList();
     }
 
     /// <summary>
@@ -109,11 +114,14 @@ public static class Indicators
         if (bars.Count < period)
             throw new InvalidQuotesException("Bollinger Bands requires at least (period) bars");
 
-        return bars.GetBollingerBands(period, standardDeviations).ToList();
+        var relevantBars = bars.TakeLast(period + 1);
+        return relevantBars.GetBollingerBands(period, standardDeviations).ToList();
     }
 
     public static void Main(string[] args)
     {
+        List<int> l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        Console.WriteLine(string.Join(", ", l.TakeLast(50)));
     }
 }
 
@@ -147,9 +155,10 @@ public static class IndicatorsExtensions
     /// </summary>
     /// <param name="series">The series of indicator results being extended with this faux indexer</param>
     /// <param name="index">The index of the underlying value to get and convert to a decimal</param>
+    /// <typeparam name="T">The type of result series to get the value from</typeparam>
     /// <returns>The value of the underlying indicator at the specified index as a decimal</returns>
     /// <exception cref="InvalidOperationException">If the type of the result series is unsupported</exception>
-    public static decimal? At(this List<ResultBase> series, int index)
+    public static decimal? At<T>(this List<T> series, Index index)
     {
         var current = series[index] switch
         {
@@ -167,7 +176,7 @@ public static class IndicatorsExtensions
     /// <param name="series">The series of Macd results being extended with this faux indexer</param>
     /// <param name="index">The index of the underlying values to get and convert to a decimal tuple</param>
     /// <returns>The value of the underlying MacdResult at the specified index as a decimal</returns>
-    public static (decimal? macd, decimal? signal, decimal? histogram) At(this List<MacdResult> series, int index)
+    public static (decimal? macd, decimal? signal, decimal? histogram) At(this List<MacdResult> series, Index index)
     {
         var current = series[index];
         return (current.Macd, current.Signal, current.Histogram).ToDecimals();
@@ -179,7 +188,7 @@ public static class IndicatorsExtensions
     /// <param name="series">The series of Bollinger Bands results being extended with this faux indexer</param>
     /// <param name="index">The index of the underlying values to get and convert to a decimal tuple</param>
     /// <returns>The value of the underlying BollingerBandsResult at the specified index as a decimal</returns>
-    public static (decimal? upper, decimal? mid, decimal? lower) At(this List<BollingerBandsResult> series, int index)
+    public static (decimal? upper, decimal? mid, decimal? lower) At(this List<BollingerBandsResult> series, Index index)
     {
         var current = series[index];
         return (current.UpperBand, current.Sma, current.LowerBand).ToDecimals();
