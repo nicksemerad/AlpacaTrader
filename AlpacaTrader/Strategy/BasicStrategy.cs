@@ -4,7 +4,6 @@ using Component;
 using Skender.Stock.Indicators;
 using Indicators;
 
-
 /// <summary>
 ///   This class is an extremely basic trading strategy, and isn't implemented yet.
 /// </summary>
@@ -14,8 +13,9 @@ public class BasicStrategy : StrategyBase
     ///   The bars representing a stock's historical prices.
     /// </summary>
     private List<Bar> _bars;
+
     private List<SmaResult> _smaResults;
-    
+
     public BasicStrategy(List<Bar> bars) : base(bars)
     {
         _bars = bars;

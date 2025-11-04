@@ -134,7 +134,7 @@ public class Response
     {
         // try to get the quotes object from content as a JObject, return an empty list if it fails
         if (!TryGetRootObject<JObject>("quotes", out var quotes)) return [];
-        
+
         // each property has the stock symbol as the name and quote data as the value, parse them to a list
         return quotes!.Properties().Select(prop => JObjectToQuotePair(prop.Name, (JObject)prop.Value)).ToList();
     }

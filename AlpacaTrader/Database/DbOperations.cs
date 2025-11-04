@@ -14,7 +14,7 @@ public static class DbOperations
     ///   executing in the case that it was called by mistake.
     /// </summary>
     /// <param name="tableName">The name of the table to truncate the rows of</param>
-    public static async Task TruncateTableRows(string tableName)
+    public static async Task TruncateTableRowsAsync(string tableName)
     {
         var tradingDbConnection = new TradingDbConnection();
         // get a connection and make a new command to truncate the table rows

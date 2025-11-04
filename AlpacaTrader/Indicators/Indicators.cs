@@ -5,7 +5,6 @@ using Component;
 using Skender.Stock.Indicators;
 using Microsoft.Extensions.Logging;
 
-
 /// <summary>
 ///   This method handles the process of converting a list of bars to a list of indicator values, as well as verifying
 ///   that there are enough bars to calculate the indicator, and enough to calculate it accurately.
@@ -70,7 +69,7 @@ public static class Indicators
             throw new InvalidQuotesException(
                 "MACD requires at least (2×(Slow+Signal) or Slow+Signal+100) bars, whichever is greater");
         if (bars.Count < period + 250)
-            IndicatorLogger.LogWarning("EMA requires (Slow+Signal+250) bars for accurate results");
+            IndicatorLogger.LogWarning("MACD requires (Slow+Signal+250) bars for accurate results");
 
         return bars.GetMacd(fastPeriod, slowPeriod, signalPeriod).ToList();
     }

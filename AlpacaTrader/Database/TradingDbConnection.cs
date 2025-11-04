@@ -58,24 +58,24 @@ public class TradingDbConnection
             return false;
         }
     }
-    
+
     /// <summary>
     ///   Initializes the database tables by creating them if they don't already exist.
     /// </summary>
     public async Task InitializeDatabaseAsync()
     {
         await using var connection = await GetConnectionAsync();
-    
+
         // create and execute the CreateBarsTable command to make the bars table if it doesn't exist
         await using var barsCmd = new NpgsqlCommand(SqlCommands.CreateBarsTable, connection);
         await barsCmd.ExecuteNonQueryAsync();
         Console.WriteLine("Database 'bars' table successfully initialized.");
-    
+
         // create and execute the CreateCalendarTable command to make trading_calendar table if it doesn't exist
         await using var calendarCmd = new NpgsqlCommand(SqlCommands.CreateCalendarTable, connection);
         await calendarCmd.ExecuteNonQueryAsync();
         Console.WriteLine("Database 'trading_calendar' table successfully initialized.");
-        
+
         Console.WriteLine("-------------------------------------------------------------");
     }
 }

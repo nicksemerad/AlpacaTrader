@@ -5,7 +5,6 @@ using Database;
 using Component;
 using Microsoft.Extensions.Logging;
 
-
 /// <summary>
 ///   This class is the ETL Pipeline for Alpaca API data. It extracts the data from specific endpoints using Client
 ///   methods, which transforms the responses into custom c# objects. DbOperations methods are then used to load the
@@ -56,7 +55,7 @@ public static class DataPipeline
     /// <summary>
     ///   This method handles the actual API calls that are made to get the symbol's bars on each day in the calendar.
     ///   To prevent making an API call to get bars that have already been retrieved and stored in the database, the
-    ///   AreBarsAlreadyInDb method is called at the start of the process for each day. If there are already bars with
+    ///   AreBarsAlreadyInDbAsync method is called at the start of the process for each day. If there are already bars with
     ///   the same parameters, the rest of the day's process is skipped, and the loop continues onto the next calendar
     ///   day. If the bars are yet to be retrieved, an API call is made for them and they are stored in the database.
     ///   After each API call, the thread waits for 300ms before continuing, in order to not surpass the 200/minute
@@ -76,7 +75,7 @@ public static class DataPipeline
             var dayEnd = day.Date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
             // if we already have the bars, skip to the next day
-            if (await AreBarsAlreadyInDb(symbol, timeframe, dayStart, dayEnd)) continue;
+            if (await AreBarsAlreadyInDbAsync(symbol, timeframe, dayStart, dayEnd)) continue;
 
             try
             {
@@ -110,7 +109,8 @@ public static class DataPipeline
     /// <param name="start">The start of the time period to check</param>
     /// <param name="end">The end of the time period to check</param>
     /// <returns>A boolean, true if the bars are already in the database and false if not</returns>
-    private static async Task<bool> AreBarsAlreadyInDb(string symbol, string timeframe, DateTime start, DateTime end)
+    private static async Task<bool> AreBarsAlreadyInDbAsync(string symbol, string timeframe, DateTime start,
+        DateTime end)
     {
         // get all the bars in the database that exactly match the parameters
         var barsInDb = await DbOperations.GetBarsBySymbolTimeframeAsync(symbol, timeframe, start, end);
@@ -128,7 +128,7 @@ public static class DataPipeline
     ///   CalendarDays are then used to retrieve all the 1-minute bars for each day, for the three starter stock
     ///   symbols.
     /// </summary>
-    private static async Task WriteDaysAndStarterStocks1MinBars(int startYear, int endYear)
+    private static async Task WriteDaysAndStarterStocks1MinBarsAsync(int startYear, int endYear)
     {
         DateTime start = new(startYear, 1, 1), end = new(endYear, 1, 1);
 
@@ -157,6 +157,6 @@ public static class DataPipeline
 
         // get all the 1-minute bars for "SPY", "QQQ", "AAPL" for
         // every trading day from 1 Jan startYear to 1 Jan endYear
-        await WriteDaysAndStarterStocks1MinBars(2020, 2025);
+        await WriteDaysAndStarterStocks1MinBarsAsync(2020, 2025);
     }
 }

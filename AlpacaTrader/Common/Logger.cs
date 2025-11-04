@@ -16,15 +16,14 @@ public static class Logger
     private static readonly ILoggerFactory Factory =
         LoggerFactory.Create(builder =>
         {
-            builder.AddSimpleConsole(
-                options =>
+            builder.AddSimpleConsole(options =>
                 {
                     options.SingleLine = true; // puts all the output on one line
                     options.TimestampFormat = "[HH:mm:ss] "; // adds a timestamp (space is on purpose)
                 }
             ).SetMinimumLevel(LogLevel.Information);
         });
-    
+
     /// <summary>
     ///   Creates a new Logger in the category of whatever is passed as a parameter, typically the name of the class
     ///   where the logger is being used. This is done by using the nameof() function to get the class name. An example

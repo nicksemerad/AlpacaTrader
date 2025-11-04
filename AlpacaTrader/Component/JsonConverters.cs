@@ -38,7 +38,7 @@ public class CalendarApiTimeOnlyConverter : JsonConverter<TimeOnly>
         bool hasExistingValue, JsonSerializer serializer)
     {
         var timeString = reader.Value?.ToString() ?? string.Empty;
-        
+
         // if it's not missing the ':' then parse it as is
         if (timeString.Contains(':'))
             return TimeOnly.Parse(timeString);
