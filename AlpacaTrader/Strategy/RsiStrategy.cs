@@ -1,5 +1,6 @@
 ﻿namespace Strategy;
 
+using Common;
 using Component;
 using Skender.Stock.Indicators;
 using Indicators;
@@ -72,24 +73,24 @@ public class RsiStrategy : Strategy
     ///   Gets a buy, hold, or sell signal based off of the RSI.
     /// </summary>
     /// <returns></returns>
-    public override int GetSignal()
+    public override TradeSignal GetSignal()
     {
         // get the latest RSI
         var currentRsi = _rsiSeries.At(^1);
 
         // in warmup period, hold
         if (currentRsi == null)
-            return 0;
+            return TradeSignal.Hold;
 
         // RSI < 30 so its oversold, buy
         if (currentRsi < _buyLevel)
-            return 1;
+            return TradeSignal.Buy;
 
         // RSI > 70 so its overbought, sell
         if (currentRsi > _sellLevel)
-            return -1;
+            return TradeSignal.Sell;
 
         // RSI is somewhere in the middle, hold
-        return 0;
+        return TradeSignal.Hold;
     }
 }

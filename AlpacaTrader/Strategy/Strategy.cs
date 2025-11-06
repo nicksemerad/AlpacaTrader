@@ -1,3 +1,5 @@
+using Common;
+
 namespace Strategy;
 
 using Component;
@@ -31,5 +33,5 @@ public abstract class Strategy
     ///   indicators and conditions.
     /// </summary>
     /// <returns>The signal determined by this strategy, based on the latest bar in Bars.</returns>
-    public abstract int GetSignal();
+    public abstract TradeSignal GetSignal();
 }

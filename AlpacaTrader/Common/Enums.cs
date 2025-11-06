@@ -16,14 +16,12 @@ public enum OrderType
     [Description("trailing_stop")] TrailingStop
 }
 
-/*
- * day: rest of the day, or queued to start next day
- * gtc: good until cancelled
- * opg: only valid during open, cancelled after
- * cls: only valid during close
- * ioc: immediately or cancel
- * foc: fill or kill, either totally filled or cancelled
- */
+// day: rest of the day, or queued to start next day
+// gtc: good until cancelled
+// opg: only valid during open, cancelled after
+// cls: only valid during close
+// ioc: immediately or cancel
+// foc: fill or kill, either totally filled or cancelled
 public enum TimeInForce
 {
     [Description("day")] Day,
@@ -34,19 +32,31 @@ public enum TimeInForce
     [Description("foc")] Fok
 }
 
-// if the order is sell or buy
+// if an Order object is an order to buy or sell
 public enum OrderSide
 {
     [Description("buy")] Buy,
     [Description("sell")] Sell
 }
 
+// if a Quote object is an Ask or a Bid
 public enum QuoteSide
 {
     [Description("ask")] Ask,
     [Description("bid")] Bid
 }
 
+// a signal to buy, sell, or hold, calculated by a strategy
+public enum TradeSignal
+{
+    [Description("buy")] Buy,
+    [Description("sell")] Sell,
+    [Description("hold")] Hold
+}
+
+/// <summary>
+///   Extends enums to be able to get their description, nice for logging or printing.
+/// </summary>
 public static class EnumExtensions
 {
     public static string ToDescription(this Enum value)
