@@ -120,8 +120,7 @@ public static class Indicators
 
     public static void Main(string[] args)
     {
-        List<int> l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        Console.WriteLine(string.Join(", ", l.TakeLast(50)));
+
     }
 }
 

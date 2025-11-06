@@ -13,12 +13,6 @@ using Indicators;
 public class RsiStrategy : Strategy
 {
     /// <summary>
-    ///   The bars representing a stock's historical prices. The first bar is the farthest in the past, and the last
-    ///   bar is the most recent.
-    /// </summary>
-    private List<Bar> _bars;
-
-    /// <summary>
     ///   The series of RSI values for the strategy's bars. Calculated with a period of 14, or whatever was passed into
     ///   the constructor when the strategy was first instantiated. 
     /// </summary>
@@ -33,22 +27,25 @@ public class RsiStrategy : Strategy
     ///   The RSI value at which a signal to buy should be made. Defaults to 30 (oversold).
     /// </summary>
     private readonly decimal _buyLevel;
-    
+
     /// <summary>
     ///   The RSI value at which a signal to sell should be made. Defaults to 70 (overbought).
     /// </summary>
     private readonly decimal _sellLevel;
 
     /// <summary>
-    ///   Constructs a new RsiStrategy object with the provided bars and decision parameters.
+    ///   Constructs a new RsiStrategy object with the provided bars and decision parameters. The two parameters
+    ///   buyLevel and sellLevel are the RSI value levels (0-100) where a buy or sell signal should be triggered. The
+    ///   buyLevel defaults to 30, meaning when the RSI drops to 30 or below a buy is signaled. The sellLevel defaults
+    ///   to 70, so when the RSI is at or above 70 a sell is signaled.
     /// </summary>
-    /// <param name="bars">The list of bars to start the RSI calculations with</param>
+    /// <param name="bars">The list of bars to start the strategy with, and use to calc RSI values</param>
     /// <param name="period">The period to calculate the RSI with</param>
     /// <param name="buyLevel">The maximum RSI value where a buy signal should be made</param>
     /// <param name="sellLevel">The minimum RSI value where a sell signal should be made</param>
     public RsiStrategy(List<Bar> bars, int period = 14, decimal buyLevel = 30m, decimal sellLevel = 70m) : base(bars)
     {
-        _bars = bars;
+        Bars = bars;
         _period = period;
         _buyLevel = buyLevel;
         _sellLevel = sellLevel;
@@ -59,15 +56,15 @@ public class RsiStrategy : Strategy
     ///   Returns the RSI series calculated with the _bars and _period.
     /// </summary>
     /// <returns></returns>
-    public List<RsiResult> GetSeries() => Indicators.GetRsiSeries(_bars, _period);
+    private List<RsiResult> GetSeries() => Indicators.GetRsiSeries(Bars, _period);
 
     /// <summary>
     ///   Adds a new bar to the bars and updates the RSI series.
     /// </summary>
     /// <param name="newBar">The new bar to add to bars and recalculate the series for</param>
-    private void Update(Bar newBar)
+    public override void Update(Bar newBar)
     {
-        _bars.Add(newBar);
+        Bars.Add(newBar);
         _rsiSeries = GetSeries();
     }
 

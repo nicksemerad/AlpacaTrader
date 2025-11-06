@@ -3,30 +3,33 @@ namespace Strategy;
 using Component;
 
 /// <summary>
-///   This abstract class contains methods that any derived strategy needs to implement, and will use to calculate
-///   signals based on the bars it is provided. 
+///   This abstract class contains methods that any derived strategy will use and the abstract methods they will need
+///   to implement in order to calculate signals based on a stock symbol's Bars that it's provided. 
 /// </summary>
 public abstract class Strategy
 {
     /// <summary>
-    ///   The bars representing a stock's historical prices.
+    ///   A single stock symbol's bars, which will be used to calculate this strategy's indicators.
     /// </summary>
-    private List<Bar> _bars;
-    
-    /// <summary>
-    ///   Gets the current list of bars.
-    /// </summary>
-    protected List<Bar> GetBars() => _bars;
+    public List<Bar> Bars { get; set; }
 
     /// <summary>
-    ///   Base constructor for any strategies. Sets _bars to the passed list of bars.
+    ///   Constructor that sets Bars to the passed list.
     /// </summary>
-    /// <param name="bars"></param>
-    protected Strategy(List<Bar> bars) => _bars = bars;
+    /// <param name="bars">The list of bars to set this strat's bars to</param>
+    protected Strategy(List<Bar> bars) => Bars = bars;
 
     /// <summary>
-    ///   Gets a buy, hold, or sell signal based off of the strategy implementation.
+    ///   Adds a new bar to this strat's Bars, and handles any other process needed by a derived strategy.
     /// </summary>
-    /// <returns>The signal determined by this strategy</returns>
+    /// <param name="newBar">The newest bar to add to this strat's Bars</param>
+    public abstract void Update(Bar newBar);
+
+    /// <summary>
+    ///   Gets a buy, hold, or sell signal based off of the strategy implementation. The buy, hold, and sell signals
+    ///   are 1, 0, and -1 respectively. Calculates the signals based on the last Bar in Bars, and any strategy
+    ///   indicators and conditions.
+    /// </summary>
+    /// <returns>The signal determined by this strategy, based on the latest bar in Bars.</returns>
     public abstract int GetSignal();
 }
