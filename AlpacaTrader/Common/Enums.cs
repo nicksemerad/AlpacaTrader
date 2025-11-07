@@ -59,7 +59,7 @@ public enum TradeSignal
 /// </summary>
 public static class EnumExtensions
 {
-    public static string ToDescription(this Enum value)
+    public static string DescString(this Enum value)
     {
         var field = value.GetType().GetField(value.ToString());
         var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
