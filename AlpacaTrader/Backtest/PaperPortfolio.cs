@@ -1,6 +1,7 @@
-using Common;
-
 namespace Backtest;
+
+using Component;
+using Common;
 
 /// <summary>
 ///   Represents a paper portfolio that tracks all buy and sell orders, assets, and cash.
@@ -28,6 +29,11 @@ public class PaperPortfolio
     public List<PaperOrder> OrderHistory { get; }
 
     /// <summary>
+    ///   The history of this portfolio's total value (shares * price + cash)
+    /// </summary>
+    public List<(DateTime date, decimal value)> ValueHistory { get; }
+
+    /// <summary>
     ///   Creates a new paper portfolio with the specified starting cash.
     /// </summary>
     public PaperPortfolio(decimal initialCash)
@@ -35,27 +41,27 @@ public class PaperPortfolio
         Cash = initialCash;
         InitialCash = initialCash;
         Positions = new Dictionary<string, decimal>();
-        OrderHistory = new List<PaperOrder>();
+        OrderHistory = [];
+        ValueHistory = [];
     }
 
     /// <summary>
-    ///   Executes a buy order.
+    ///   Tries to execute a buy order for the symbol, price, and quantity of shares. If there isn't enough cash to
+    ///   complete the order it returns false. If there is enough, the portfolio's cash, positions, and order history
+    ///   are updated, and it returns true.
     /// </summary>
-    /// <param name="symbol">Stock symbol to buy</param>
+    /// <param name="symbol">Stock symbol to buy shares of</param>
     /// <param name="quantity">Number of shares to buy</param>
     /// <param name="price">Price per share</param>
     /// <param name="timestamp">Time of the buy order</param>
     /// <returns>True if successful, false if we can't afford it</returns>
-    public bool Buy(string symbol, decimal quantity, decimal price, DateTime timestamp)
+    public bool TryBuy(string symbol, decimal quantity, decimal price, DateTime timestamp)
     {
         // calculate the total cost
         var cost = quantity * price;
 
-        // check if we can afford it
-        if (cost > Cash)
-            return false;
-
-        // we can afford it, so subtract the cost
+        // check if we can afford it before subtracting the cost
+        if (Cash < cost) return false;
         Cash -= cost;
 
         // add the quantity just "bought" to Positions for the symbol
@@ -70,27 +76,25 @@ public class PaperPortfolio
     }
 
     /// <summary>
-    ///   Executes a sell order.
+    ///   Tries to execute a sell order for the symbol, price, and quantity of shares. If it doesn't have enough shares
+    ///   to meet the order quantity, it returns false. If there is enough, the portfolio's cash, positions, and order
+    ///   history are updated, and it returns true.
     /// </summary>
-    /// <param name="symbol">Stock symbol to sell</param>
+    /// <param name="symbol">Stock symbol to sell shares of</param>
     /// <param name="quantity">Number of shares to sell</param>
     /// <param name="price">Price per share</param>
     /// <param name="timestamp">Time of the sell order</param>
     /// <returns>True if successful, false if we don't have enough shares</returns>
-    public bool Sell(string symbol, decimal quantity, decimal price, DateTime timestamp)
+    public bool TrySell(string symbol, decimal quantity, decimal price, DateTime timestamp)
     {
         // make sure we have enough shares to sell
-        if (!Positions.TryGetValue(symbol, out decimal shares) || shares < quantity)
+        if (!Positions.TryGetValue(symbol, out var shares) || shares < quantity)
             return false;
 
-        // sell successful, update Cash and Positions
+        // we have enough shares so consider them sold, update Cash and Positions
         var saleRevenue = quantity * price;
         Cash += saleRevenue;
         Positions[symbol] -= quantity;
-
-        // if we sold all our shares, remove the symbol from Positions
-        if (Positions[symbol] == 0m)
-            Positions.Remove(symbol);
 
         // record the sell order
         OrderHistory.Add(new PaperOrder(timestamp, symbol, OrderSide.Sell, quantity, price, saleRevenue));
@@ -99,19 +103,22 @@ public class PaperPortfolio
     }
 
     /// <summary>
-    ///   Calculates the current portfolio value (cash + position values).
+    ///   Calculates the current portfolio value (shares * share price + cash).
     /// </summary>
-    /// <param name="currentPrices">Current prices for each held symbol</param>
+    /// <param name="latestBars">A list of the latest bar(s) for the symbol(s)</param>
     /// <returns>Total portfolio value</returns>
-    public decimal GetPortfolioValue(Dictionary<string, decimal> currentPrices)
+    public decimal GetPortfolioValue(List<Bar> latestBars)
     {
-        // sum up all the shares and their prices in the portfolio
-        decimal positionValue = 0;
-        foreach (var (symbol, quantity) in Positions)
-            if (currentPrices.TryGetValue(symbol, out var quantityValue))
-                positionValue += quantity * quantityValue;
+        // use the latest bars to calc each symbols current share price
+        var currentPrices = latestBars.ToDictionary(bar => bar.Symbol, bar => bar.Close);
 
-        return Cash + positionValue;
+        // sum up all the shares and their prices in the portfolio
+        decimal positionsValue = 0;
+        foreach (var (symbol, quantity) in Positions)
+            if (currentPrices.TryGetValue(symbol, out var price))
+                positionsValue += quantity * price;
+
+        return Cash + positionsValue;
     }
 
     /// <summary>
@@ -121,6 +128,16 @@ public class PaperPortfolio
     {
         return Positions.GetValueOrDefault(symbol, 0m);
     }
+
+    /// <summary>
+    ///   Records the current portfolio value using the list of the latest bars. The timestamp for the record is the
+    ///   timestamp for the first bar in the list.
+    /// </summary>
+    /// <param name="latestBars">A list of the latest bar(s) for the symbol(s)</param>
+    public void RecordValue(List<Bar> latestBars)
+    {
+        ValueHistory.Add((latestBars[0].Date, GetPortfolioValue(latestBars)));
+    }
 }
 
 /// <summary>
@@ -128,17 +145,16 @@ public class PaperPortfolio
 /// </summary>
 public class PaperOrder(DateTime time, string symbol, OrderSide side, decimal quantity, decimal price, decimal total)
 {
-    public DateTime Timestamp { get; } = time;
-    public string Symbol { get; } = symbol;
-    public OrderSide Side { get; } = side;
-    public decimal Quantity { get; } = quantity;
-    public decimal Price { get; } = price;
-    public decimal Total { get; } = total;
-
+    private DateTime Timestamp { get; } = time;
+    private string Symbol { get; } = symbol;
+    private OrderSide Side { get; } = side;
+    private decimal Quantity { get; } = quantity;
+    private decimal Price { get; } = price;
+    private decimal Total { get; } = total;
 
     public override string ToString()
     {
-        return $"[{Timestamp:yyyy-MM-dd HH:mm}] {Side.ToDescription()} {Quantity} {Symbol} shares " +
-               $"@ ${Price:F2} => ${Total:F2};";
+        return $"[{Timestamp:yyyy-MM-dd HH:mm}] {Side.DescString().ToUpper()} {Quantity,4} " +
+               $"{Symbol} shares @ ${Price:F2} ea. (${Total:F2})";
     }
 }
