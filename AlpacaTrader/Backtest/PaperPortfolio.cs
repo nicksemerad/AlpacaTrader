@@ -2,12 +2,18 @@ namespace Backtest;
 
 using Component;
 using Common;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Represents a paper portfolio that tracks all buy and sell orders, assets, and cash.
 /// </summary>
 public class PaperPortfolio
 {
+    /// <summary>
+    ///   The logger for this PaperPortfolio.
+    /// </summary>
+    private static readonly ILogger PortLog = Logger.Create(nameof(PaperPortfolio));
+
     /// <summary>
     ///   Current cash.
     /// </summary>
@@ -65,12 +71,13 @@ public class PaperPortfolio
         Cash -= cost;
 
         // add the quantity just "bought" to Positions for the symbol
-        if (!Positions.ContainsKey(symbol))
-            Positions[symbol] = 0m;
+        Positions.TryAdd(symbol, 0m);
         Positions[symbol] += quantity;
 
-        // record the buy order
-        OrderHistory.Add(new PaperOrder(timestamp, symbol, OrderSide.Buy, quantity, price, cost));
+        // make, log, and record the order
+        var order = new PaperOrder(timestamp, symbol, OrderSide.Buy, quantity, price, cost);
+        PortLog.LogDebug("Order: {Order}", order);
+        OrderHistory.Add(order);
 
         return true;
     }
@@ -96,8 +103,10 @@ public class PaperPortfolio
         Cash += saleRevenue;
         Positions[symbol] -= quantity;
 
-        // record the sell order
-        OrderHistory.Add(new PaperOrder(timestamp, symbol, OrderSide.Sell, quantity, price, saleRevenue));
+        // make, log, and record the order
+        var order = new PaperOrder(timestamp, symbol, OrderSide.Sell, quantity, price, saleRevenue);
+        PortLog.LogDebug("Order: {Order}", order);
+        OrderHistory.Add(order);
 
         return true;
     }

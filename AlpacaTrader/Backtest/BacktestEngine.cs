@@ -4,6 +4,7 @@ using Common;
 using Strategy;
 using Component;
 using Database;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   This class tests different strategies by simulating historical bars and the passage of time in order to test how
@@ -24,6 +25,11 @@ public class BacktestEngine
         var engine = new BacktestEngine(strategy, bars);
         engine.Run();
     }
+
+    /// <summary>
+    ///   The logger object for this BacktestEngine.
+    /// </summary>
+    private static readonly ILogger EngineLog = Logger.Create(nameof(BacktestEngine));
 
     /// <summary>
     ///   The strategy to backtest with.
@@ -58,36 +64,36 @@ public class BacktestEngine
     }
 
     /// <summary>
-    ///   Print the initial backtest conditions, run the backtest, and print the results. Before the test begins
-    ///   running, the strategy will have already been constructed with some bars to start with. Usually 250 as
-    ///   that is enough to smooth the indicator values from the skender stock library. These initial 250 bars
-    ///   are just the first 250 bars in the total bars. When the test begins, a for loop is used to iterate
-    ///   through all the total bars, starting at the first bar not included in the strategy's initial bars.
+    ///   Logs the initial conditions, runs the backtest, and logs the results. Before the test begins running, the
+    ///   strategy will have already been constructed with some bars to start with. Usually 250 as that is enough to
+    ///   smooth the indicator values from the skender stock library. These initial 250 bars are just the first 250
+    ///   bars in the total bars. When the test begins, a for loop is used to iterate through all the total bars,
+    ///   starting at the first bar not included in the strategy's initial bars.
     ///   <example>
-    ///     For example, if the strategy is initialized with 250 bars (sBars), it has indices 0-249. Assume
-    ///     there are 1,000 total bars (tBars), so indices 0-999. They overlap on all sBar indices, as that is how
-    ///     the strategy is initialized. The loop will start at 250 and iterate to 999, adding the tBar at the index to
-    ///     the end of sBars. Each time a new bar is added to the strategy, a signal is generated and handled. This
-    ///     (very roughly) simulates the passing of time.
+    ///     For example, if the strategy is initialized with 250 bars (sBars), it has indices 0-249. Assume there are
+    ///     1,000 total bars (tBars), so indices 0-999. They overlap on all sBar indices, as that is how the strategy
+    ///     is initialized. The loop will start at 250 and iterate to 999, adding the tBar at the index to the end of
+    ///     sBars. Each time a new bar is added to the strategy, a signal is generated and handled. This (very roughly)
+    ///     simulates the passing of time.
     ///   </example>
     /// </summary>
     private void Run()
     {
-        PrintSetup();
+        LogSetup();
 
         // iterate from strategy bars count to total bar count
         for (int i = _strategy.Bars.Count; i < _bars.Count; i++)
         {
             var newBar = _bars[i];
             _strategy.Update(newBar);
-            var signal = _strategy.GetSignal();
 
-            // handle the new bar's signal and record the portfolio value if
-            // it returns true, indicating that an order was made successfully
-            if (HandleSignal(signal, newBar)) _portfolio.RecordValue([newBar]);
+            // get and handle the new bar's signal, and record the portfolio value if
+            // the signal handler returned true indicating that an order was made
+            if (HandleSignal(_strategy.GetSignal(), newBar))
+                _portfolio.RecordValue([newBar]);
         }
 
-        PrintResults();
+        LogResults();
     }
 
     /// <summary>
@@ -123,25 +129,25 @@ public class BacktestEngine
     }
 
     /// <summary>
-    ///   Prints the initial state of the backtest.
+    ///   Logs the initial state of the backtest.
     /// </summary>
-    private void PrintSetup()
+    private void LogSetup()
     {
-        Console.WriteLine("##################################################");
-        Console.WriteLine("##              STARTING BACKTEST               ##");
-        Console.WriteLine("##################################################");
-        Console.WriteLine($"Symbol:          {_bars[0].Symbol}");
-        Console.WriteLine($"Initial cash:    ${_portfolio.InitialCash:N2}");
-        Console.WriteLine($"Total bars:      {_bars.Count:N0}");
-        Console.WriteLine($"Start date:      {_bars.First().Date:yyyy-MM-dd}");
-        Console.WriteLine($"End date:        {_bars.Last().Date:yyyy-MM-dd}");
-        Console.WriteLine("##################################################");
+        var dateRange = $"{_bars.First().Date:yyyy-MM-dd} -> {_bars.Last().Date:yyyy-MM-dd}";
+
+        EngineLog.LogInformation("##################################################");
+        EngineLog.LogInformation("STARTING BACKTEST");
+        EngineLog.LogInformation("##################################################");
+        EngineLog.LogInformation("          Symbol:  {Symbol}", _bars[0].Symbol);
+        EngineLog.LogInformation("    Initial cash:  ${Cash:N2}", _portfolio.InitialCash);
+        EngineLog.LogInformation("      Total bars:  {Bars:N0}", _bars.Count);
+        EngineLog.LogInformation("     Time period:  {Period}", dateRange);
     }
 
     /// <summary>
-    ///   Prints the ending state of the backtest, along with some simple metrics.
+    ///   Logs the ending state of the backtest, along with some simple metrics.
     /// </summary>
-    private void PrintResults()
+    private void LogResults()
     {
         var initCash = _portfolio.InitialCash;
         var finalValue = _portfolio.ValueHistory.Last().value;
@@ -149,15 +155,14 @@ public class BacktestEngine
         var totalReturn = netGain / initCash;
         var numTrades = _portfolio.OrderHistory.Count;
 
-        Console.WriteLine("##################################################");
-        Console.WriteLine("##               BACKTEST RESULTS               ##");
-        Console.WriteLine("##################################################");
-        Console.WriteLine($"Initial Cash:       ${initCash:N2}");
-        Console.WriteLine($"Ending Value:       ${finalValue:N2}");
-        Console.WriteLine($"Net Gains:          ${netGain:N2}");
-        Console.WriteLine($"Total Return:       {totalReturn:P2}");
-        Console.WriteLine($"Total Trades:       {numTrades:N0}");
-        Console.WriteLine($"Avg. Trade Gain:    ${netGain / numTrades:F2}");
-        Console.WriteLine("##################################################");
+        EngineLog.LogInformation("##################################################");
+        EngineLog.LogInformation("BACKTEST RESULTS");
+        EngineLog.LogInformation("##################################################");
+        EngineLog.LogInformation($"   Initial Cash:  ${initCash:N2}");
+        EngineLog.LogInformation($"   Ending Value:  ${finalValue:N2}");
+        EngineLog.LogInformation($"      Net Gains:  ${netGain:N2}");
+        EngineLog.LogInformation($"   Total Return:  {totalReturn:P2}");
+        EngineLog.LogInformation($"   Total Trades:  {numTrades:N0}");
+        EngineLog.LogInformation($"Avg. Trade Gain:  ${netGain / numTrades:F2}");
     }
 }
