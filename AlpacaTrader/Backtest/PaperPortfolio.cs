@@ -116,7 +116,7 @@ public class PaperPortfolio
     /// </summary>
     /// <param name="latestBars">A list of the latest bar(s) for the symbol(s)</param>
     /// <returns>Total portfolio value</returns>
-    public decimal GetPortfolioValue(List<Bar> latestBars)
+    private decimal GetPortfolioValue(List<Bar> latestBars)
     {
         // use the latest bars to calc each symbols current share price
         var currentPrices = latestBars.ToDictionary(bar => bar.Symbol, bar => bar.Close);
