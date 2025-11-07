@@ -64,7 +64,7 @@ public class Quote
     /// <returns>A string holding the quote side, exchange code, price, and size</returns>
     public override string ToString()
     {
-        return $"{Side.ToDescription().ToUpper()}: " + $"{Size} shares for ${Price} ea. via {Exchange}";
+        return $"{Side.DescString().ToUpper()}: " + $"{Size} shares for ${Price} ea. via {Exchange}";
     }
 }
 
