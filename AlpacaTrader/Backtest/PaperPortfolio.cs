@@ -32,7 +32,7 @@ public class PaperPortfolio
     /// <summary>
     ///   The history of all buy and sell orders made.
     /// </summary>
-    public List<PaperOrder> OrderHistory { get; }
+    public List<Order> OrderHistory { get; }
 
     /// <summary>
     ///   The history of this portfolio's total value (shares * price + cash)
@@ -75,8 +75,8 @@ public class PaperPortfolio
         Positions[symbol] += quantity;
 
         // make, log, and record the order
-        var order = new PaperOrder(timestamp, symbol, OrderSide.Buy, quantity, price, cost);
-        PortLog.LogDebug("Order: {Order}", order);
+        var order = PaperOrder(timestamp, symbol, OrderSide.Buy, quantity, price, cost);
+        PortLog.LogDebug("Order: {Order}", PaperOrderToString(order));
         OrderHistory.Add(order);
 
         return true;
@@ -104,8 +104,8 @@ public class PaperPortfolio
         Positions[symbol] -= quantity;
 
         // make, log, and record the order
-        var order = new PaperOrder(timestamp, symbol, OrderSide.Sell, quantity, price, saleRevenue);
-        PortLog.LogDebug("Order: {Order}", order);
+        var order = PaperOrder(timestamp, symbol, OrderSide.Sell, quantity, price, saleRevenue);
+        PortLog.LogDebug("Order: {Order}", PaperOrderToString(order));
         OrderHistory.Add(order);
 
         return true;
@@ -147,23 +147,39 @@ public class PaperPortfolio
     {
         ValueHistory.Add((latestBars[0].Date, GetPortfolioValue(latestBars)));
     }
-}
 
-/// <summary>
-///   A single buy or sell order.
-/// </summary>
-public class PaperOrder(DateTime time, string symbol, OrderSide side, decimal quantity, decimal price, decimal total)
-{
-    private DateTime Timestamp { get; } = time;
-    private string Symbol { get; } = symbol;
-    private OrderSide Side { get; } = side;
-    private decimal Quantity { get; } = quantity;
-    private decimal Price { get; } = price;
-    private decimal Total { get; } = total;
-
-    public override string ToString()
+    /// <summary>
+    ///   Creates a new order with the specified parameters.
+    /// </summary>
+    /// <param name="time">The timestamp when the order was created</param>
+    /// <param name="symbol">The stock or asset symbol for the order</param>
+    /// <param name="side">The side of the order, either Buy or Sell</param>
+    /// <param name="quantity">The number of shares or units for the order</param>
+    /// <param name="price">The price per unit of the asset involved in the order</param>
+    /// <param name="total">The total cost or revenue of the order</param>
+    /// <returns>A new order instance with the specified parameters</returns>
+    private static Order PaperOrder(DateTime time, string symbol, OrderSide side, decimal quantity, decimal price,
+        decimal total)
     {
-        return $"[{Timestamp:yyyy-MM-dd HH:mm}] {Side.DescString().ToUpper()} {Quantity,4} " +
-               $"{Symbol} shares @ ${Price:F2} ea. (${Total:F2})";
+        return new Order
+        {
+            Timestamp = time,
+            Symbol = symbol,
+            Side = side,
+            Quantity = quantity,
+            Price = price,
+            TotalCost = total
+        };
+    }
+
+    /// <summary>
+    ///   Converts a paper order to a string that describes the order details.
+    /// </summary>
+    /// <param name="order">The order to be converted to string format</param>
+    /// <returns>A formatted string representation of the specified order</returns>
+    private static string PaperOrderToString(Order order)
+    {
+        return $"[{order.Timestamp:yyyy-MM-dd HH:mm}] {order.Side.DescString().ToUpper()} {order.Quantity,4} " +
+               $"{order.Symbol} shares @ ${order.Price:F2} ea. (${order.TotalCost:F2})";
     }
 }
