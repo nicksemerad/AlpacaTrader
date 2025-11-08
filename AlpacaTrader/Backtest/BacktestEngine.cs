@@ -7,8 +7,8 @@ using Database;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-///   This class tests different strategies by simulating historical bars and the passage of time in order to test how
-///   they may have performed.
+///   This class tests different strategies by simulating historical bars and the passage of time to test how they may
+///   have performed.
 /// </summary>
 public class BacktestEngine
 {
@@ -51,7 +51,7 @@ public class BacktestEngine
     ///   this will be updated in the future. I decided against having the symbol as a parameter here in the
     ///   constructor, which is likely to change. The reason I did this is multithreading. If it's running a strategy
     ///   and backtesting it on many symbols, it makes sense to me that I make each of them on their own thread. We
-    ///   will see though!
+    ///   will see, though!
     /// </summary>
     /// <param name="strategy">The strategy to backtest</param>
     /// <param name="bars">The historical bars to use for the backtest</param>
@@ -87,7 +87,7 @@ public class BacktestEngine
             var newBar = _bars[i];
             _strategy.Update(newBar);
 
-            // get and handle the new bar's signal, and record the portfolio value if
+            // get and handle the new bar's signal and record the portfolio value if
             // the signal handler returned true indicating that an order was made
             if (HandleSignal(_strategy.GetSignal(), newBar))
                 _portfolio.RecordValue([newBar]);
@@ -98,9 +98,9 @@ public class BacktestEngine
 
     /// <summary>
     ///   Handles a signal produced by the strategy because of the newBar. When a buy or sell order is signaled, as of
-    ///   now we try and buy as many shares as we can afford, or sell every share we own. If the order succeeds, this
+    ///   now, we try and buy as many shares as we can afford or sell every share we own. If the order succeeds, this
     ///   method returns true. If it fails, or a hold was signaled, false is returned. True means that the portfolio
-    ///   has changed, false means it has not. This is so that the portfolio value is only calculated and stored if
+    ///   has changed; false means it has not. This is so that the portfolio value is only calculated and stored if
     ///   the new bar changed it. This method will be changed as time goes on, this is just a first draft. Here are a
     ///   few things that will likely be changed:
     ///   <list type="bullet">
@@ -118,10 +118,10 @@ public class BacktestEngine
 
         return signal switch
         {
-            // on a sell signal, try to sell every share
-            TradeSignal.Sell => _portfolio.TrySell(symbol, numShares, price, date),
+            // on a sell signal, try to sell every share (if we have any)
+            TradeSignal.Sell => numShares > 0 &&  _portfolio.TrySell(symbol, numShares, price, date),
             // on a buy signal, first calculate how many shares we can buy with our cash, then try to buy them
-            TradeSignal.Buy => (int)(_portfolio.Cash / price) is var sharesToBuy and > 0 &&
+            TradeSignal.Buy => numShares == 0 && (int)(_portfolio.Cash / price) is var sharesToBuy and > 0 &&
                                _portfolio.TryBuy(symbol, sharesToBuy, price, date),
             // when the signal was to Hold
             _ => false
@@ -136,10 +136,10 @@ public class BacktestEngine
         var dateRange = $"{_bars.First().Date:yyyy-MM-dd} -> {_bars.Last().Date:yyyy-MM-dd}";
 
         EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation("STARTING BACKTEST");
+        EngineLog.LogInformation("        BACKTEST:  START");
         EngineLog.LogInformation("##################################################");
         EngineLog.LogInformation("          Symbol:  {Symbol}", _bars[0].Symbol);
-        EngineLog.LogInformation("    Initial cash:  ${Cash:N2}", _portfolio.InitialCash);
+        EngineLog.LogInformation("    Initial cash:  {Cash:C}", _portfolio.InitialCash);
         EngineLog.LogInformation("      Total bars:  {Bars:N0}", _bars.Count);
         EngineLog.LogInformation("     Time period:  {Period}", dateRange);
     }
@@ -154,15 +154,15 @@ public class BacktestEngine
         var netGain = finalValue - initCash;
         var totalReturn = netGain / initCash;
         var numTrades = _portfolio.OrderHistory.Count;
-
+    
         EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation("BACKTEST RESULTS");
+        EngineLog.LogInformation("        BACKTEST:  RESULTS");
         EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation($"   Initial Cash:  ${initCash:N2}");
-        EngineLog.LogInformation($"   Ending Value:  ${finalValue:N2}");
-        EngineLog.LogInformation($"      Net Gains:  ${netGain:N2}");
-        EngineLog.LogInformation($"   Total Return:  {totalReturn:P2}");
-        EngineLog.LogInformation($"   Total Trades:  {numTrades:N0}");
-        EngineLog.LogInformation($"Avg. Trade Gain:  ${netGain / numTrades:F2}");
+        EngineLog.LogInformation("    Initial Cash:  ${InitCash:N2}", initCash);
+        EngineLog.LogInformation("    Ending Value:  ${Final:N2}", finalValue);
+        EngineLog.LogInformation("       Net Gains:  ${NetGain:N2}", netGain);
+        EngineLog.LogInformation("         Returns:  {TotalReturn:P2}", totalReturn);
+        EngineLog.LogInformation("    Total Trades:  {NumTrades:N0}", numTrades);
+        EngineLog.LogInformation(" Avg. Trade Gain:  ${TradeGain:N2}", netGain / numTrades);
     }
 }
