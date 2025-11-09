@@ -27,7 +27,7 @@ public class PaperPortfolio
     /// <summary>
     ///   The portfolio's stock positions (symbol and quantity of shares).
     /// </summary>
-    public Dictionary<string, decimal> Positions { get; }
+    private Dictionary<string, decimal> Positions { get; }
 
     /// <summary>
     ///   The history of all buy and sell orders made.
@@ -46,7 +46,7 @@ public class PaperPortfolio
     {
         Cash = initialCash;
         InitialCash = initialCash;
-        Positions = new Dictionary<string, decimal>();
+        Positions = [];
         OrderHistory = [];
         ValueHistory = [];
     }
@@ -179,7 +179,7 @@ public class PaperPortfolio
     /// <returns>A formatted string representation of the specified order</returns>
     private static string PaperOrderToString(Order order)
     {
-        return $"[{order.Timestamp:yyyy-MM-dd HH:mm}] {order.Side.DescString().ToUpper()} {order.Quantity,4} " +
-               $"{order.Symbol} shares @ ${order.Price:F2} ea. (${order.TotalCost:F2})";
+        return $"[{order.Timestamp:yyyy-MM-dd HH:mm}] {order.Side.DescString().ToUpper()} {order.Quantity:N} " +
+               $"{order.Symbol} shares @ ${order.Price:N} ea. (${order.TotalCost:N})";
     }
 }

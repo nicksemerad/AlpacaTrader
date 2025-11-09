@@ -79,7 +79,7 @@ public class BacktestEngine
     /// </summary>
     private void Run()
     {
-        LogSetup();
+        Metrics.LogBacktestStart(_bars, _portfolio);
 
         // iterate from strategy bars count to total bar count
         for (int i = _strategy.Bars.Count; i < _bars.Count; i++)
@@ -93,7 +93,7 @@ public class BacktestEngine
                 _portfolio.RecordValue([newBar]);
         }
 
-        LogResults();
+        Metrics.LogBacktestResults(_portfolio);
     }
 
     /// <summary>
@@ -119,50 +119,12 @@ public class BacktestEngine
         return signal switch
         {
             // on a sell signal, try to sell every share (if we have any)
-            TradeSignal.Sell => numShares > 0 &&  _portfolio.TrySell(symbol, numShares, price, date),
+            TradeSignal.Sell => numShares > 0 && _portfolio.TrySell(symbol, numShares, price, date),
             // on a buy signal, first calculate how many shares we can buy with our cash, then try to buy them
             TradeSignal.Buy => numShares == 0 && (int)(_portfolio.Cash / price) is var sharesToBuy and > 0 &&
                                _portfolio.TryBuy(symbol, sharesToBuy, price, date),
             // when the signal was to Hold
             _ => false
         };
-    }
-
-    /// <summary>
-    ///   Logs the initial state of the backtest.
-    /// </summary>
-    private void LogSetup()
-    {
-        var dateRange = $"{_bars.First().Date:yyyy-MM-dd} -> {_bars.Last().Date:yyyy-MM-dd}";
-
-        EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation("        BACKTEST:  START");
-        EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation("          Symbol:  {Symbol}", _bars[0].Symbol);
-        EngineLog.LogInformation("    Initial cash:  {Cash:C}", _portfolio.InitialCash);
-        EngineLog.LogInformation("      Total bars:  {Bars:N0}", _bars.Count);
-        EngineLog.LogInformation("     Time period:  {Period}", dateRange);
-    }
-
-    /// <summary>
-    ///   Logs the ending state of the backtest, along with some simple metrics.
-    /// </summary>
-    private void LogResults()
-    {
-        var initCash = _portfolio.InitialCash;
-        var finalValue = _portfolio.ValueHistory.Last().value;
-        var netGain = finalValue - initCash;
-        var totalReturn = netGain / initCash;
-        var numTrades = _portfolio.OrderHistory.Count;
-    
-        EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation("        BACKTEST:  RESULTS");
-        EngineLog.LogInformation("##################################################");
-        EngineLog.LogInformation("    Initial Cash:  ${InitCash:N2}", initCash);
-        EngineLog.LogInformation("    Ending Value:  ${Final:N2}", finalValue);
-        EngineLog.LogInformation("       Net Gains:  ${NetGain:N2}", netGain);
-        EngineLog.LogInformation("         Returns:  {TotalReturn:P2}", totalReturn);
-        EngineLog.LogInformation("    Total Trades:  {NumTrades:N0}", numTrades);
-        EngineLog.LogInformation(" Avg. Trade Gain:  ${TradeGain:N2}", netGain / numTrades);
     }
 }
