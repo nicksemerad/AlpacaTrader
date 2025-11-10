@@ -14,7 +14,7 @@ public static class Metrics
     ///   The logger for this Metrics class.
     /// </summary>
     private static readonly ILogger MetricsLog = Logger.Create(nameof(BacktestEngine));
-    
+
     /// <summary>
     ///   Logs the starting conditions for a backtest. This includes the symbol, initial cash, total bars, and time
     ///   period.
@@ -24,6 +24,7 @@ public static class Metrics
     public static void LogBacktestStart(List<Bar> totalBars, PaperPortfolio portfolio)
     {
         var dateRange = $"{totalBars.First().Date:yyyy-MM-dd} -> {totalBars.Last().Date:yyyy-MM-dd}";
+        // Console.WriteLine($"DAYS: {totalBars.GroupBy(b => DateOnly.FromDateTime(b.Date)).Count()}");
 
         MetricsLog.LogInformation("##################################################");
         MetricsLog.LogInformation("        BACKTEST:  START");
@@ -49,9 +50,9 @@ public static class Metrics
 
         var startVal = portfolio.InitialCash;
         var endVal = portfolio.ValueHistory.Last().value;
-
         var pnl = endVal - startVal;
-        var totalReturn = pnl / startVal;
+        var roi = pnl / startVal;
+        var sharpe = CalcSharpeRatio(portfolio);
 
         var allTrades = Trade.MatchTrades(portfolio.OrderHistory);
         var wins = allTrades.Where(t => t.Win).ToList();
@@ -70,9 +71,11 @@ public static class Metrics
         MetricsLog.LogInformation("    Initial Cash:  ${InitCash:N}", startVal);
         MetricsLog.LogInformation("    Ending Value:  ${FinalVal:N}", endVal);
         MetricsLog.LogInformation("             PnL:  ${PnL:N}", pnl);
-        MetricsLog.LogInformation("    Total Return:  {TotalReturn:P2}", totalReturn);
+        MetricsLog.LogInformation("             ROI:  {Roi:P2}", roi);
         MetricsLog.LogInformation("    Max Drawdown:  ${MaxDrawdown:N}", maxDrawdown);
+        MetricsLog.LogInformation("    Sharpe Ratio:  ${Sharpe:N2}", sharpe);
         MetricsLog.LogInformation("");
+        MetricsLog.LogInformation("    Total Orders:  {NumOrders:N0}", portfolio.OrderHistory.Count);
         MetricsLog.LogInformation("    Total Trades:  {NumTrades:N0}", allTrades.Count);
         MetricsLog.LogInformation("");
         MetricsLog.LogInformation("        Win Rate:  {WinRate:P2}", winRate);
@@ -118,5 +121,67 @@ public static class Metrics
         }
 
         return (maxLossStreak, maxDrawdown);
+    }
+
+    /// <summary>
+    ///   Calculates the Sharpe ratio using the portfolio's value history. The Sharpe ratio is a metric that tries to
+    ///   measure the risk-adjusted return of a portfolio. The annualized parameter is used to determine whether the
+    ///   user wants the annualized sharpe (defaults to true because it is most common), or if they want the daily
+    ///   sharpe. Note that this assumes that the risk-free rate is 2%, which seems like a low estimate from what I've
+    ///   seen online.
+    /// </summary>
+    /// <param name="portfolio">The portfolio with the value history to calculate the Sharpe Ratio of</param>
+    /// <param name="annualized">If the user wants the annualized Sharpe instead of daily, defaults to true</param>
+    /// <returns>The portfolio Sharpe Ratio as a double</returns>
+    private static double CalcSharpeRatio(PaperPortfolio portfolio, bool annualized = true)
+    {
+        // calculate the daily return percentages for the portfolio's history
+        var returns = CalcDailyReturns(portfolio);
+
+        // need at least 2 values to calc the standard deviation
+        if (returns.Count < 2) return 0;
+
+        // calculate the mean and standard deviation of the daily returns
+        var mean = returns.Average();
+        var sumOfSquares = returns.Sum(r => Math.Pow(r - mean, 2));
+        var stdDev = Math.Sqrt(sumOfSquares / (returns.Count - 1));
+
+        // make sure the standard deviation isn't zero before dividing
+        if (stdDev == 0) return 0;
+
+        // assume that the risk-free rate is 2% and calculate the daily risk-free rate
+        var riskFreeRate = 0.02;
+        var rfDaily = Math.Pow(1 + riskFreeRate, 1 / 252d) - 1;
+
+        // calculate the Sharpe ratio and annualize it by default
+        var sharpe = (mean - rfDaily) / stdDev;
+        return annualized ? sharpe * Math.Sqrt(252) : sharpe;
+    }
+
+    /// <summary>
+    ///   Calculates the return percentage for each day recorded in the portfolio's value history.
+    /// </summary>
+    /// <param name="portfolio">The portfolio with the value history to calculate the daily returns of</param>
+    /// <returns>A list of doubles with each one corresponding to a day's return percentage</returns>
+    private static List<double> CalcDailyReturns(PaperPortfolio portfolio)
+    {
+        // group the portfolio's value history by date and get each day's close value
+        var values = portfolio.ValueHistory
+            .GroupBy(v => DateOnly.FromDateTime(v.date))
+            .Select(g => g.Last().value)
+            .ToList();
+
+        // list to hold the daily return percentages
+        List<double> dailyReturns = [];
+
+        // calculate the daily return for each day and add it to the list
+        for (int i = 1; i < values.Count; i++)
+        {
+            // divide the difference between today and yesterday's close values by yesterday's close value
+            var dayReturns = (values[i] - values[i - 1]) / values[i - 1];
+            dailyReturns.Add((double)dayReturns);
+        }
+
+        return dailyReturns;
     }
 }
