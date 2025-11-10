@@ -73,7 +73,7 @@ public static class Metrics
         MetricsLog.LogInformation("             PnL:  ${PnL:N}", pnl);
         MetricsLog.LogInformation("             ROI:  {Roi:P2}", roi);
         MetricsLog.LogInformation("    Max Drawdown:  ${MaxDrawdown:N}", maxDrawdown);
-        MetricsLog.LogInformation("    Sharpe Ratio:  ${Sharpe:N2}", sharpe);
+        MetricsLog.LogInformation("    Sharpe Ratio:  {Sharpe:N2}", sharpe);
         MetricsLog.LogInformation("");
         MetricsLog.LogInformation("    Total Orders:  {NumOrders:N0}", portfolio.OrderHistory.Count);
         MetricsLog.LogInformation("    Total Trades:  {NumTrades:N0}", allTrades.Count);
