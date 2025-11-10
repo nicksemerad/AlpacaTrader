@@ -48,10 +48,11 @@ public static class Metrics
         if (portfolio.OrderHistory.Count == 0 || portfolio.ValueHistory.Count == 0)
             throw new InvalidOperationException("Cannot log metrics for an empty portfolio history");
 
-        var startVal = portfolio.InitialCash;
-        var endVal = portfolio.ValueHistory.Last().value;
-        var pnl = endVal - startVal;
-        var roi = pnl / startVal;
+        var startEquity = portfolio.InitialCash;
+        var endEquity = portfolio.ValueHistory.Last().value;
+        var maxEquity = portfolio.ValueHistory.Max(v => v.value);
+        var pnl = endEquity - startEquity;
+        var roi = pnl / startEquity;
         var sharpe = CalcSharpeRatio(portfolio);
 
         var allTrades = Trade.MatchTrades(portfolio.OrderHistory);
@@ -68,8 +69,9 @@ public static class Metrics
         MetricsLog.LogInformation("##################################################");
         MetricsLog.LogInformation("        BACKTEST:  RESULTS");
         MetricsLog.LogInformation("##################################################");
-        MetricsLog.LogInformation("    Initial Cash:  ${InitCash:N}", startVal);
-        MetricsLog.LogInformation("    Ending Value:  ${FinalVal:N}", endVal);
+        MetricsLog.LogInformation("    Initial Cash:  ${StartEq:N}", startEquity);
+        MetricsLog.LogInformation("    Final Equity:  ${EndEq:N}", endEquity);
+        MetricsLog.LogInformation("      Max Equity:  ${MaxEq:N}", maxEquity);
         MetricsLog.LogInformation("             PnL:  ${PnL:N}", pnl);
         MetricsLog.LogInformation("             ROI:  {Roi:P2}", roi);
         MetricsLog.LogInformation("    Max Drawdown:  ${MaxDrawdown:N}", maxDrawdown);
