@@ -85,7 +85,6 @@ public static class Metrics
         MetricsLog.LogInformation("   Losing Trades:  {LoseTrades:N0}", losses.Count);
         MetricsLog.LogInformation("       Avg. Loss:  ${AvgTrade:N}", avgLoss);
         MetricsLog.LogInformation(" Max Loss Streak:  {MaxConLoss:N0}", maxLossStreak);
-        MetricsLog.LogInformation("");
     }
 
     /// <summary>
