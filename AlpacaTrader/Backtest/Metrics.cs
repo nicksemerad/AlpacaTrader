@@ -2,6 +2,7 @@ namespace Backtest;
 
 using Common;
 using Component;
+using RiskManager;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -49,8 +50,10 @@ public static class Metrics
             throw new InvalidOperationException("Cannot log metrics for an empty portfolio history");
 
         var startEquity = portfolio.InitialCash;
-        var endEquity = portfolio.ValueHistory.Last().value;
+        var fees = TradingCosts.EstimateOrderHistoryTotalFees(portfolio.OrderHistory);
+        var endEquity = portfolio.ValueHistory.Last().value - fees;
         var maxEquity = portfolio.ValueHistory.Max(v => v.value);
+        
         var pnl = endEquity - startEquity;
         var roi = pnl / startEquity;
         var sharpe = CalcSharpeRatio(portfolio);
@@ -72,6 +75,8 @@ public static class Metrics
         MetricsLog.LogInformation("    Initial Cash:  ${StartEq:N}", startEquity);
         MetricsLog.LogInformation("    Final Equity:  ${EndEq:N}", endEquity);
         MetricsLog.LogInformation("      Max Equity:  ${MaxEq:N}", maxEquity);
+        MetricsLog.LogInformation("        Est.Fees:  ${Fees:N}", fees);
+        MetricsLog.LogInformation("");
         MetricsLog.LogInformation("             PnL:  ${PnL:N}", pnl);
         MetricsLog.LogInformation("             ROI:  {Roi:P2}", roi);
         MetricsLog.LogInformation("    Max Drawdown:  ${MaxDrawdown:N}", maxDrawdown);
@@ -83,7 +88,6 @@ public static class Metrics
         MetricsLog.LogInformation("        Win Rate:  {WinRate:P2}", winRate);
         MetricsLog.LogInformation("  Winning Trades:  {WinTrades:N0}", wins.Count);
         MetricsLog.LogInformation("        Avg. Win:  ${AvgTrade:N}", avgWin);
-        MetricsLog.LogInformation("");
         MetricsLog.LogInformation("   Losing Trades:  {LoseTrades:N0}", losses.Count);
         MetricsLog.LogInformation("       Avg. Loss:  ${AvgTrade:N}", avgLoss);
         MetricsLog.LogInformation(" Max Loss Streak:  {MaxConLoss:N0}", maxLossStreak);

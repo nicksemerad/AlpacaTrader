@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\Component\Component.csproj" />
+      <ProjectReference Include="..\RiskManager\RiskManager.csproj" />
       <ProjectReference Include="..\Strategy\Strategy.csproj" />
     </ItemGroup>
 

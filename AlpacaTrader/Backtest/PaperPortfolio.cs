@@ -1,3 +1,5 @@
+using RiskManager;
+
 namespace Backtest;
 
 using Component;
@@ -63,7 +65,11 @@ public class PaperPortfolio
     /// <returns>True if successful, false if we can't afford it</returns>
     public bool TryBuy(string symbol, decimal quantity, decimal price, DateTime timestamp)
     {
-        // calculate the total cost
+        // add random slippage and calculate the total cost
+        var res = 1 + TradingCosts.AddRandomSlippage(price);
+        price *= res;
+        
+        
         var cost = quantity * price;
 
         // check if we can afford it before subtracting the cost
@@ -97,6 +103,10 @@ public class PaperPortfolio
         // make sure we have enough shares to sell
         if (!Positions.TryGetValue(symbol, out var shares) || shares < quantity)
             return false;
+        
+        // add random slippage to the price
+        var res = 1 - TradingCosts.AddRandomSlippage(price);
+        price *= res;
 
         // we have enough shares so consider them sold, update Cash and Positions
         var saleRevenue = quantity * price;
