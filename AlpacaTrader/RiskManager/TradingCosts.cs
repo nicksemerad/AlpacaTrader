@@ -54,13 +54,11 @@ public static class TradingCosts
     ///   Adds random slippage to a price that is +/- 0.25% of the price, or whichever maxSlippage factor is passed in.
     ///   The resulting price is rounded to the nearest penny.
     /// </summary>
-    /// <param name="price">The initial share price before adding slippage</param>
     /// <param name="maxSlippage">The maximum +/- slippage range</param>
     /// <returns>The share price after applying a random slippage factor in the specified range</returns>
-    public static decimal AddRandomSlippage(decimal price, decimal maxSlippage = 0.0025m)
+    public static decimal GetRandomSlippage(decimal maxSlippage = 0.0025m)
     {
-        var rDub = new Random().NextDouble();
-        var slippage = (decimal)rDub * maxSlippage;
-        return slippage;
+        var randomDouble = new Random().NextDouble();
+        return (decimal)randomDouble * maxSlippage;
     }
 }

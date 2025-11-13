@@ -66,10 +66,8 @@ public class PaperPortfolio
     public bool TryBuy(string symbol, decimal quantity, decimal price, DateTime timestamp)
     {
         // add random slippage and calculate the total cost
-        var res = 1 + TradingCosts.AddRandomSlippage(price);
-        price *= res;
-
-
+        var randSlippage = 1 + TradingCosts.GetRandomSlippage();
+        price *= randSlippage;
         var cost = quantity * price;
 
         // check if we can afford it before subtracting the cost
@@ -105,8 +103,8 @@ public class PaperPortfolio
             return false;
 
         // add random slippage to the price
-        var res = 1 - TradingCosts.AddRandomSlippage(price);
-        price *= res;
+        var randSlippage = 1 - TradingCosts.GetRandomSlippage();
+        price *= randSlippage;
 
         // we have enough shares so consider them sold, update Cash and Positions
         var saleRevenue = quantity * price;
