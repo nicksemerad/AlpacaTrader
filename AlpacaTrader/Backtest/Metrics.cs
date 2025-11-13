@@ -53,7 +53,7 @@ public static class Metrics
         var fees = TradingCosts.EstimateOrderHistoryTotalFees(portfolio.OrderHistory);
         var endEquity = portfolio.ValueHistory.Last().value - fees;
         var maxEquity = portfolio.ValueHistory.Max(v => v.value);
-        
+
         var pnl = endEquity - startEquity;
         var roi = pnl / startEquity;
         var sharpe = CalcSharpeRatio(portfolio);

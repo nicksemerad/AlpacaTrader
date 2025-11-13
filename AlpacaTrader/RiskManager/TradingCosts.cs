@@ -1,6 +1,6 @@
-﻿using Component;
+﻿namespace RiskManager;
 
-namespace RiskManager;
+using Component;
 
 /// <summary>
 ///   https://files.alpaca.markets/disclosures/library/BrokFeeSched.pdf
@@ -28,7 +28,7 @@ public static class TradingCosts
     {
         // group orders by day, as that is when fees are rounded and charged
         var dayOrders = orders.GroupBy(o => DateOnly.FromDateTime(o.Timestamp)).ToList();
-        
+
         var totalShares = orders.Sum(o => o.Quantity);
         Console.WriteLine(totalShares);
 
@@ -42,7 +42,7 @@ public static class TradingCosts
             into dailyTotalFees // round the total fees to the nearest penny
             select RoundToNearestPenny(dailyTotalFees)).Sum();
     }
-    
+
     /// <summary>
     ///   Rounds a decimal value up to the nearest penny.
     /// </summary>

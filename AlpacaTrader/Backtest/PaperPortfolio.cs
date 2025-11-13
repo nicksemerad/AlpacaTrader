@@ -68,8 +68,8 @@ public class PaperPortfolio
         // add random slippage and calculate the total cost
         var res = 1 + TradingCosts.AddRandomSlippage(price);
         price *= res;
-        
-        
+
+
         var cost = quantity * price;
 
         // check if we can afford it before subtracting the cost
@@ -103,7 +103,7 @@ public class PaperPortfolio
         // make sure we have enough shares to sell
         if (!Positions.TryGetValue(symbol, out var shares) || shares < quantity)
             return false;
-        
+
         // add random slippage to the price
         var res = 1 - TradingCosts.AddRandomSlippage(price);
         price *= res;
