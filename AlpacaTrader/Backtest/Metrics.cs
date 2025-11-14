@@ -54,6 +54,7 @@ public static class Metrics
         var endEquity = portfolio.ValueHistory.Last().value - fees;
         var maxEquity = portfolio.ValueHistory.Max(v => v.value);
 
+        var sharesTraded = portfolio.OrderHistory.Sum(o => o.Quantity);
         var pnl = endEquity - startEquity;
         var roi = pnl / startEquity;
         var sharpe = CalcSharpeRatio(portfolio);
@@ -77,6 +78,7 @@ public static class Metrics
         MetricsLog.LogInformation("      Max Equity:  ${MaxEq:N}", maxEquity);
         MetricsLog.LogInformation("        Est.Fees:  ${Fees:N}", fees);
         MetricsLog.LogInformation("");
+        MetricsLog.LogInformation("   Shares Traded:  {Shares:N0}", sharesTraded);
         MetricsLog.LogInformation("             PnL:  ${PnL:N}", pnl);
         MetricsLog.LogInformation("             ROI:  {Roi:P2}", roi);
         MetricsLog.LogInformation("    Max Drawdown:  ${MaxDrawdown:N}", maxDrawdown);

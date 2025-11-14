@@ -28,10 +28,7 @@ public static class TradingCosts
     {
         // group orders by day, as that is when fees are rounded and charged
         var dayOrders = orders.GroupBy(o => DateOnly.FromDateTime(o.Timestamp)).ToList();
-
-        var totalShares = orders.Sum(o => o.Quantity);
-        Console.WriteLine(totalShares);
-
+        
         // first time seeing this syntax thanks to my IDE recommending it.
         return (from day in dayOrders
             let dayShares = day.Sum(d => d.Quantity) // sum the shares for each day
@@ -51,7 +48,7 @@ public static class TradingCosts
     private static decimal RoundToNearestPenny(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
     /// <summary>
-    ///   Adds random slippage to a price that is +/- 0.25% of the price, or whichever maxSlippage factor is passed in.
+    ///   Adds random slippage to a price that is +/- 0.15% of the price, or whichever maxSlippage factor is passed in.
     ///   The resulting price is rounded to the nearest penny.
     /// </summary>
     /// <param name="maxSlippage">The maximum +/- slippage range</param>
