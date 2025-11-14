@@ -2,7 +2,7 @@ namespace Backtest;
 
 using Common;
 using Component;
-using RiskManager;
+using Strategy;
 using Microsoft.Extensions.Logging;
 
 /// <summary>

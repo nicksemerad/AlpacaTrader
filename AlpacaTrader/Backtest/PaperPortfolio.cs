@@ -1,9 +1,8 @@
-using RiskManager;
-
 namespace Backtest;
 
-using Component;
 using Common;
+using Component;
+using Strategy;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -69,7 +68,7 @@ public class PaperPortfolio
         var randSlippage = 1 + TradingCosts.GetRandomSlippage();
         price *= randSlippage;
         var cost = quantity * price;
-
+        
         // check if we can afford it before subtracting the cost
         if (Cash < cost) return false;
         Cash -= cost;
