@@ -56,7 +56,7 @@ public static class TradingCosts
     /// </summary>
     /// <param name="maxSlippage">The maximum +/- slippage range</param>
     /// <returns>The share price after applying a random slippage factor in the specified range</returns>
-    public static decimal GetRandomSlippage(decimal maxSlippage = 0.0025m)
+    public static decimal GetRandomSlippage(decimal maxSlippage = 0.0015m)
     {
         var randomDouble = new Random().NextDouble();
         return (decimal)randomDouble * maxSlippage;
