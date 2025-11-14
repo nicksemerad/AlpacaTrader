@@ -97,30 +97,46 @@ public static class Indicators
     }
 
     /// <summary>
+    ///   Gets a series with the volatility over the specified period for the provided bars. The period defaults to 30.
+    /// </summary>
+    /// <param name="bars">The bars to calculate the volatility with</param>
+    /// <param name="period">The number of past bars to calculate the volatility with</param>
+    /// <returns>A list of volatility results for the provided bars and period</returns>
+    /// <exception cref="InvalidQuotesException">If there aren't enough bars to calculate the volatility</exception>
+    public static List<StdDevResult> GetStdDevSeries(List<Bar> bars, int period = 30)
+    {
+        if (period < 2)
+            throw new InvalidQuotesException("Volatility requires a lookback period of at least 2");
+        if (bars.Count < period)
+            throw new InvalidQuotesException("Volatility requires at least (period) bars");
+
+        var relevantBars = bars.TakeLast(period + 1);
+        return relevantBars.GetStdDev(period).ToList();
+    }
+
+    /// <summary>
     ///   Gets a series with the bollinger bands over the specified period and standard dev. for the provided bars.
     /// </summary>
     /// <param name="bars">The bars to calculate the bands with</param>
     /// <param name="period">The number of past bars to calculate the bands with</param>
-    /// <param name="standardDeviations">The number of standard deviations above and below the bands are</param>
+    /// <param name="stdDevs">The number of standard deviations above and below the bands are</param>
     /// <returns>A list of bollinger bands results for the provided bars and period</returns>
     /// <exception cref="InvalidQuotesException">If there aren't enough bars to calculate the bands</exception>
-    public static List<BollingerBandsResult> GetBollingerBands(
-        List<Bar> bars, int period = 20, double standardDeviations = 2)
+    public static List<BollingerBandsResult> GetBollingerBands(List<Bar> bars, int period = 20, double stdDevs = 2)
     {
         if (period < 2)
             throw new InvalidQuotesException("Bollinger bands requires a lookback period of at least 2");
-        if (standardDeviations < 1)
+        if (stdDevs < 1)
             throw new InvalidQuotesException("Bollinger bands requires a standard deviation of at least 1");
         if (bars.Count < period)
             throw new InvalidQuotesException("Bollinger Bands requires at least (period) bars");
 
         var relevantBars = bars.TakeLast(period + 1);
-        return relevantBars.GetBollingerBands(period, standardDeviations).ToList();
+        return relevantBars.GetBollingerBands(period, stdDevs).ToList();
     }
 
     public static void Main(string[] args)
     {
-
     }
 }
 
@@ -134,7 +150,7 @@ public static class IndicatorsExtensions
     /// </summary>
     /// <param name="value">The double to convert</param>
     /// <returns>The double value in decimal form</returns>
-    public static decimal? ToDecimal(this double? value)
+    private static decimal? ToDecimal(this double? value)
     {
         return Convert.ToDecimal(value);
     }
@@ -144,7 +160,7 @@ public static class IndicatorsExtensions
     /// </summary>
     /// <param name="values">The tuple to convert</param>
     /// <returns>The decimal tuple</returns>
-    public static (decimal?, decimal?, decimal?) ToDecimals(this (double? a, double? b, double? c) values)
+    private static (decimal?, decimal?, decimal?) ToDecimals(this (double? a, double? b, double? c) values)
     {
         return (values.a.ToDecimal(), values.b.ToDecimal(), values.c.ToDecimal());
     }
