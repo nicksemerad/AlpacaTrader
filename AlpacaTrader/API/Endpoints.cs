@@ -1,4 +1,6 @@
-﻿namespace Common;
+﻿namespace Api;
+
+using Common;
 
 /// <summary>
 ///   This class holds common Alpaca API endpoint urls and handles their construction.

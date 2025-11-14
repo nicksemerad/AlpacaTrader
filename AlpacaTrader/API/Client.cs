@@ -1,8 +1,8 @@
+namespace Api;
+
 using Common;
 using Component;
 using Microsoft.Extensions.Logging;
-
-namespace Api;
 
 /// <summary>
 ///   This class orchestrates the processes that retrieve and store Alpaca API data. This is done by using many
