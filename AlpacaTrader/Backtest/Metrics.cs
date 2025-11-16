@@ -58,6 +58,8 @@ public static class Metrics
         var pnl = endEquity - startEquity;
         var roi = pnl / startEquity;
         var sharpe = CalcSharpeRatio(portfolio);
+        var maxDrawdown = maxEquity - endEquity;
+        var maxDrawdownPercent = maxDrawdown / endEquity;
 
         var allTrades = Trade.MatchTrades(portfolio.OrderHistory);
         var wins = allTrades.Where(t => t.Win).ToList();
@@ -66,8 +68,7 @@ public static class Metrics
         var winRate = (decimal)wins.Count / allTrades.Count;
         var avgWin = wins.Average(w => w.TotalProfit);
         var avgLoss = losses.Average(l => l.TotalProfit);
-
-        var (maxLossStreak, maxDrawdown) = CalculateMaxLossStreakAndDrawdown(allTrades);
+        var maxLossStreak = CalculateMaxLossStreak(allTrades);
 
         // log all the calculated metrics from the backtested portfolio
         MetricsLog.LogInformation("##################################################");
@@ -82,6 +83,7 @@ public static class Metrics
         MetricsLog.LogInformation("             PnL:  ${PnL:N}", pnl);
         MetricsLog.LogInformation("             ROI:  {Roi:P2}", roi);
         MetricsLog.LogInformation("    Max Drawdown:  ${MaxDrawdown:N}", maxDrawdown);
+        MetricsLog.LogInformation("  Max Drawdown %:  {MaxDrawdownPercent:P2}", maxDrawdownPercent);
         MetricsLog.LogInformation("    Sharpe Ratio:  {Sharpe:N2}", sharpe);
         MetricsLog.LogInformation("");
         MetricsLog.LogInformation("    Total Orders:  {NumOrders:N0}", portfolio.OrderHistory.Count);
@@ -96,39 +98,31 @@ public static class Metrics
     }
 
     /// <summary>
-    ///   Calculates the maximum consecutive loss streak and drawdown for the provided list of trades.
+    ///   Calculates the maximum consecutive loss streak for the provided list of trades.
     /// </summary>
     /// <param name="trades">The list of the portfolio's trades</param>
-    /// <returns>An integer and decimal tuple with the max loss streak and max drawdown</returns>
-    private static (int maxLossStreak, decimal maxDrawdown) CalculateMaxLossStreakAndDrawdown(List<Trade> trades)
+    /// <returns>An integer with the max loss streak</returns>
+    private static int CalculateMaxLossStreak(List<Trade> trades)
     {
         // set the max and current streaks/ values to zero before starting
-        int maxLossStreak = 0, currentLossStreak = 0;
-        decimal currentEquity = 0m, maxEquity = 0m, maxDrawdown = 0m;
+        int lossStreak = 0, maxLossStreak = 0;
 
         foreach (var trade in trades)
         {
             // if the trade was a loss, update the current (and max if needed) streak, else restart it
             if (!trade.Win)
             {
-                if (++currentLossStreak > maxLossStreak) maxLossStreak = currentLossStreak;
+                if (++lossStreak > maxLossStreak) maxLossStreak = lossStreak;
             }
             else
             {
-                currentLossStreak = 0;
+                lossStreak = 0;
             }
-
-            // update the current (and max if needed) equity
-            currentEquity += trade.TotalProfit;
-            if (currentEquity > maxEquity) maxEquity = currentEquity;
-
-            // calculate the current (and update max if needed) drawdown
-            var drawdown = maxEquity - currentEquity;
-            if (drawdown > maxDrawdown) maxDrawdown = drawdown;
         }
 
-        return (maxLossStreak, maxDrawdown);
+        return maxLossStreak;
     }
+
 
     /// <summary>
     ///   Calculates the Sharpe ratio using the portfolio's value history. The Sharpe ratio is a metric that tries to
